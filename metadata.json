@@ -1,0 +1,6 @@
+{
+  "name": "PPDB WhatsApp Extractor",
+  "description": "Extractor pesan WhatsApp dan Chatbot Interaktif Pendaftaran Wali Murid PPDB Subulussalam dengan integrasi Google Sheets, verifikasi otomatis, ID resmi A-2026-XXXX, dan ekspor Excel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
