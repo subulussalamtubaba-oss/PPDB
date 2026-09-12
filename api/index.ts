@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import { Applicant } from "../src/server/models/Applicant.js";
+import { AppSettings } from "../src/server/models/Settings.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -123,6 +124,46 @@ app.post("/api/applicants/bulk-sync", async (req, res) => {
     return res.json({ success: true });
   } catch (err: any) {
     return res.status(400).json({ error: err.message });
+  }
+});
+
+// GET /api/settings
+app.get("/api/settings", async (req, res) => {
+  try {
+    const isMongo = await connectDB();
+    if (isMongo) {
+      let settings = await AppSettings.findOne({ key: "global_settings" });
+      if (!settings) {
+        settings = await AppSettings.create({ key: "global_settings" });
+      }
+      return res.json(settings);
+    }
+    return res.json({});
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/settings
+app.put("/api/settings", async (req, res) => {
+  try {
+    const { academicYearConfig, sheetConfig } = req.body;
+    const isMongo = await connectDB();
+    if (isMongo) {
+      const updateData: any = {};
+      if (academicYearConfig) updateData.academicYearConfig = academicYearConfig;
+      if (sheetConfig !== undefined) updateData.sheetConfig = sheetConfig;
+
+      const updated = await AppSettings.findOneAndUpdate(
+        { key: "global_settings" },
+        { $set: updateData },
+        { new: true, upsert: true }
+      );
+      return res.json(updated);
+    }
+    return res.json({ academicYearConfig, sheetConfig });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
   }
 });
 

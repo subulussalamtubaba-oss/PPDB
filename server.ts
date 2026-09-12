@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import mongoose from "mongoose";
 import { Applicant } from "./src/server/models/Applicant";
+import { AppSettings } from "./src/server/models/Settings";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -12,6 +13,18 @@ let isConnecting = false;
 
 // Fallback in-memory storage for preview/development when MONGODB_URI is not set
 let localApplicants: any[] = [];
+let localSettings = {
+  academicYearConfig: {
+    tahunPelajaran: "2026/2027",
+    angkatan: "7",
+    biayaPendaftaran: "150.000",
+    rekeningPembayaran: "7702 0102 2580 530 a/n ponpes Subulussalam (Bank BRI)",
+    kontakAdminWa: "085832297239",
+    kodeTahunId: "2026",
+    namaSekolah: "Pondok Pesantren & Madrasah Subulussalam",
+  },
+  sheetConfig: null as any,
+};
 
 async function getDBStatus(): Promise<boolean> {
   const uri = process.env.MONGODB_URI;
@@ -157,6 +170,52 @@ async function startServer() {
       return res.json({ success: true });
     } catch (err: any) {
       return res.status(400).json({ error: err.message });
+    }
+  });
+
+  // Settings Endpoints - Sync across all devices (Desktop, Mobile, etc.) via MongoDB
+  app.get("/api/settings", async (req, res) => {
+    try {
+      const isMongo = await getDBStatus();
+      if (isMongo) {
+        let settings = await AppSettings.findOne({ key: "global_settings" });
+        if (!settings) {
+          settings = await AppSettings.create({
+            key: "global_settings",
+            academicYearConfig: localSettings.academicYearConfig,
+            sheetConfig: localSettings.sheetConfig,
+          });
+        }
+        return res.json(settings);
+      }
+      return res.json(localSettings);
+    } catch (err: any) {
+      return res.json(localSettings);
+    }
+  });
+
+  app.put("/api/settings", async (req, res) => {
+    try {
+      const { academicYearConfig, sheetConfig } = req.body;
+      const isMongo = await getDBStatus();
+      if (isMongo) {
+        const updateData: any = {};
+        if (academicYearConfig) updateData.academicYearConfig = academicYearConfig;
+        if (sheetConfig !== undefined) updateData.sheetConfig = sheetConfig;
+
+        const updated = await AppSettings.findOneAndUpdate(
+          { key: "global_settings" },
+          { $set: updateData },
+          { new: true, upsert: true }
+        );
+        return res.json(updated);
+      }
+
+      if (academicYearConfig) localSettings.academicYearConfig = academicYearConfig;
+      if (sheetConfig !== undefined) localSettings.sheetConfig = sheetConfig;
+      return res.json(localSettings);
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
     }
   });
 

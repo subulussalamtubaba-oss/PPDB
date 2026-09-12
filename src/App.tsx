@@ -72,11 +72,16 @@ export default function App() {
     return null;
   });
 
-  // Save sheet config to localStorage
-  const handleSaveSheetConfig = (config: SheetConfig) => {
+  // Save sheet config to localStorage and database
+  const handleSaveSheetConfig = async (config: SheetConfig) => {
     setSheetConfig(config);
     try {
       localStorage.setItem('ppdb_sheet_config', JSON.stringify(config));
+      await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sheetConfig: config }),
+      });
     } catch {
       // ignore
     }
@@ -117,10 +122,15 @@ export default function App() {
     return DEFAULT_ACADEMIC_YEAR_CONFIG;
   });
 
-  const handleSaveAcademicYearConfig = (cfg: AcademicYearConfig) => {
+  const handleSaveAcademicYearConfig = async (cfg: AcademicYearConfig) => {
     setAcademicYearConfig(cfg);
     try {
       localStorage.setItem('ppdb_academic_year_config', JSON.stringify(cfg));
+      await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ academicYearConfig: cfg }),
+      });
     } catch {
       // ignore
     }
@@ -170,7 +180,7 @@ export default function App() {
     }, 4500);
   };
 
-  // Fetch applicants from server (MongoDB or local server storage fallback)
+  // Fetch applicants and global settings from server (MongoDB or local server storage fallback)
   useEffect(() => {
     const loadApplicants = async () => {
       try {
@@ -186,7 +196,28 @@ export default function App() {
         setIsFetchingApplicants(false);
       }
     };
+
+    const loadSettings = async () => {
+      try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.academicYearConfig) {
+            setAcademicYearConfig(data.academicYearConfig);
+            localStorage.setItem('ppdb_academic_year_config', JSON.stringify(data.academicYearConfig));
+          }
+          if (data.sheetConfig) {
+            setSheetConfig(data.sheetConfig);
+            localStorage.setItem('ppdb_sheet_config', JSON.stringify(data.sheetConfig));
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+
     loadApplicants();
+    loadSettings();
   }, []);
 
   // Initialize Firebase Auth listener
