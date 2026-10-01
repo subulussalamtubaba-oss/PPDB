@@ -111,7 +111,7 @@ export const ChatbotPortal: React.FC<ChatbotPortalProps> = ({
 
   useEffect(() => {
     startConversation();
-  }, [cfg.tahunPelajaran, cfg.angkatan, cfg.namaSekolah]);
+  }, [cfg.tahunPelajaran, cfg.angkatan, cfg.namaSekolah, cfg.biayaPendaftaran, cfg.rekeningPembayaran]);
 
   const startConversation = () => {
     setDraft(INITIAL_DRAFT);
@@ -323,7 +323,7 @@ export const ChatbotPortal: React.FC<ChatbotPortalProps> = ({
       setDraft((prev) => ({ ...prev, pipSebelumnya: isPip }));
       setCurrentStep(9);
       botReply(
-        `Status bantuan PIP: *${isPip === 'Ya' ? 'Penerima PIP' : 'Bukan Penerima PIP'}*.\n\nTerakhir untuk administrasi registrasi formulir sebesar **Rp 150.000**, apakah Bapak/Ibu sudah melakukan pembayaran/transfer ke rekening resmi pondok pesantren?\n\n🏦 *Bank BRI: 7702 0102 2580 530*\n*a/n Ponpes Subulussalam*\n\n*(Catatan: Jika belum transfer saat ini, pendaftaran tetap bisa diproses dan bukti transfer dapat disusulkan kemudian)*`,
+        `Status bantuan PIP: *${isPip === 'Ya' ? 'Penerima PIP' : 'Bukan Penerima PIP'}*.\n\nTerakhir untuk administrasi registrasi formulir sebesar **Rp ${cfg.biayaPendaftaran}**, apakah Bapak/Ibu sudah melakukan pembayaran/transfer ke rekening resmi pondok pesantren?\n\n🏦 *${cfg.rekeningPembayaran}*\n\n*(Catatan: Jika belum transfer saat ini, pendaftaran tetap bisa diproses dan bukti transfer dapat disusulkan kemudian)*`,
         650,
         ['Sudah Transfer / Bayar ✅', 'Belum Bayar (Akan Segera Transfer) ⏳']
       );
@@ -348,7 +348,7 @@ export const ChatbotPortal: React.FC<ChatbotPortalProps> = ({
         `• *Nomor WhatsApp:* ${updatedDraft.noWa}\n` +
         `• *Nomor NISN:* ${updatedDraft.nisn}\n` +
         `• *Bantuan PIP SD:* ${updatedDraft.pipSebelumnya === 'Ya' ? 'Penerima PIP' : 'Bukan'}\n` +
-        `• *Biaya Registrasi (Rp 150.000):* ${isPaid === 'Sudah' ? 'Sudah Ditransfer' : 'Belum (Menyusul)'}\n\n` +
+        `• *Biaya Registrasi (Rp ${cfg.biayaPendaftaran}):* ${isPaid === 'Sudah' ? 'Sudah Ditransfer' : 'Belum (Menyusul)'}\n\n` +
         `Apakah data di atas sudah sesuai dan siap kami teruskan ke panitia penerimaan santri baru?`,
         850,
         ['Sudah Sesuai, Kirim Pendaftaran 🚀', 'Ada yang Perlu Diperbaiki ✏️'],
@@ -625,7 +625,7 @@ ${cfg.rekeningPembayaran}`;
                           }`}
                         >
                           {msg.applicantCard.statusPembayaran === 'Sudah'
-                            ? 'Sudah Dibayar (Rp 150.000)'
+                            ? `Sudah Dibayar (Rp ${cfg.biayaPendaftaran})`
                             : 'Belum Bayar (Menyusul)'}
                         </span>
                       </div>
