@@ -11,6 +11,10 @@ const SettingsSchema = new mongoose.Schema(
       kontakAdminWa: { type: String, default: "085832297239" },
       kodeTahunId: { type: String, default: "2026" },
       namaSekolah: { type: String, default: "Pondok Pesantren & Madrasah Subulussalam" },
+      promoDiskonAktif: { type: Boolean, default: true },
+      persenDiskon: { type: Number, default: 50 },
+      kuotaPendaftarDiskon: { type: Number, default: 15 },
+      pesanIklanPromo: { type: String, default: "PROMO KHUSUS: Potongan Biaya Pendaftaran 50% untuk 15 Pendaftar Pertama!" },
     },
     sheetConfig: {
       spreadsheetId: { type: String, default: "" },

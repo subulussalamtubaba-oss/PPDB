@@ -19,6 +19,10 @@ const ApplicantSchema = new Schema<ApplicantDocument>({
   nisn: { type: String, required: true },
   pipSebelumnya: { type: String, enum: ['Ya', 'Tidak'], required: true },
   statusPembayaran: { type: String, enum: ['Sudah', 'Belum'], required: true },
+  waktuTransfer: { type: String },
+  metodeTransfer: { type: String },
+  namaPengirimTransfer: { type: String },
+  nominalTransfer: { type: String },
   statusVerifikasi: {
     type: String,
     enum: ['TERVERIFIKASI', 'MENUNGGU VERIFIKASI', 'PERLU PERBAIKAN', 'DITOLAK'],

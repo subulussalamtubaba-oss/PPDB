@@ -36,7 +36,11 @@ Berikut rincian data pendaftaran ananda:
     applicant.statusPembayaran.toUpperCase() === 'SUDAH'
       ? 'SUDAH DIBAYAR / DITRANSFER'
       : 'BELUM DIBAYAR (MENYUSUL)'
-  }*
+  }*${
+    applicant.statusPembayaran.toUpperCase() === 'SUDAH' && applicant.nominalTransfer
+      ? `\n  - Nominal: Rp ${applicant.nominalTransfer}\n  - Saluran/Bank: ${applicant.metodeTransfer || '-'}\n  - Pengirim: ${applicant.namaPengirimTransfer || '-'}\n  - Waktu: ${applicant.waktuTransfer || '-'}`
+      : ''
+  }
 
 Mohon perkenan Bapak/Ibu Panitia PPDB untuk memeriksa dan memverifikasi data di atas. Apabila terdapat berkas atau persyaratan lanjutan yang perlu kami lengkapi, mohon dapat mengabari kami melalui nomor WhatsApp ini.
 

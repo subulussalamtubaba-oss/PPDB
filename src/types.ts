@@ -14,6 +14,10 @@ export interface Pendaftar {
   nisn: string;
   pipSebelumnya: 'Ya' | 'Tidak';
   statusPembayaran: 'Sudah' | 'Belum';
+  waktuTransfer?: string;
+  metodeTransfer?: string; // e.g. "Bank BRI", "DANA", "BCA", dll
+  namaPengirimTransfer?: string;
+  nominalTransfer?: string;
   statusVerifikasi: VerificationStatus;
   catatanVerifikasi: string[];
   verificationScore: number; // 0 to 100
@@ -58,6 +62,11 @@ export interface AcademicYearConfig {
   kontakAdminWa: string; // e.g. "085832297239"
   kodeTahunId: string; // e.g. "2026"
   namaSekolah: string; // e.g. "Pondok Pesantren & Madrasah Subulussalam"
+  // Fitur Iklan Promo Potongan Biaya Pendaftaran
+  promoDiskonAktif?: boolean;
+  persenDiskon?: number; // e.g. 50 (50%)
+  kuotaPendaftarDiskon?: number; // e.g. 15 (15 pendaftar pertama)
+  pesanIklanPromo?: string; // e.g. "PROMO SPESIAL: Potongan 50% Biaya Pendaftaran untuk 15 Pendaftar Pertama!"
 }
 
 export const DEFAULT_ACADEMIC_YEAR_CONFIG: AcademicYearConfig = {
@@ -68,4 +77,8 @@ export const DEFAULT_ACADEMIC_YEAR_CONFIG: AcademicYearConfig = {
   kontakAdminWa: '085832297239',
   kodeTahunId: '2026',
   namaSekolah: 'Pondok Pesantren & Madrasah Subulussalam',
+  promoDiskonAktif: true,
+  persenDiskon: 50,
+  kuotaPendaftarDiskon: 15,
+  pesanIklanPromo: 'PROMO KHUSUS: Potongan Biaya Pendaftaran 50% untuk 15 Pendaftar Pertama!',
 };

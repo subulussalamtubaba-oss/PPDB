@@ -257,7 +257,9 @@ export const appendApplicantToSheet = async (
     applicant.noWa,
     applicant.nisn,
     applicant.pipSebelumnya,
-    applicant.statusPembayaran,
+    applicant.statusPembayaran === 'Sudah' && applicant.nominalTransfer
+      ? `Sudah (Rp ${applicant.nominalTransfer} via ${applicant.metodeTransfer || '-'} a/n ${applicant.namaPengirimTransfer || '-'})`
+      : applicant.statusPembayaran,
     applicant.statusVerifikasi,
     applicant.catatanVerifikasi.join('; ') || 'Data lengkap dan valid',
   ];

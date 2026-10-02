@@ -792,6 +792,7 @@ export default function App() {
 
             <ChatbotPortal
               onAddApplicant={handleChatbotAddApplicant}
+              onUpdateApplicant={handleUpdateApplicant}
               existingApplicants={applicants}
               sheetConfig={sheetConfig}
               isSheetsConnected={!!accessToken && !!sheetConfig?.spreadsheetId}

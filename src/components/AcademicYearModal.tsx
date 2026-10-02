@@ -11,6 +11,9 @@ import {
   RotateCcw,
   CheckCircle2,
   HelpCircle,
+  Tag,
+  Percent,
+  Flame,
 } from 'lucide-react';
 import { AcademicYearConfig, DEFAULT_ACADEMIC_YEAR_CONFIG } from '../types';
 
@@ -274,6 +277,103 @@ export const AcademicYearModal: React.FC<AcademicYearModalProps> = ({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Pengaturan Promo Iklan Potongan Biaya Pendaftaran */}
+          <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
+                  <Flame className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-amber-950 flex items-center space-x-1.5">
+                    <span>Program Iklan Promo Potongan Biaya Pendaftaran</span>
+                    <span className="text-[10px] bg-amber-200 text-amber-900 font-extrabold px-1.5 py-0.5 rounded-full">
+                      Otomatis
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-amber-800">
+                    Otomatis memotong biaya pendaftaran bagi sejumlah pendaftar pertama
+                  </p>
+                </div>
+              </div>
+
+              {/* Toggle Switch */}
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.promoDiskonAktif ?? true}
+                  onChange={(e) => setForm({ ...form, promoDiskonAktif: e.target.checked })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+              </label>
+            </div>
+
+            {form.promoDiskonAktif && (
+              <div className="space-y-3 pt-1 border-t border-amber-200/80">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-amber-950 mb-1">
+                      Besar Potongan Biaya (%)
+                    </label>
+                    <div className="relative">
+                      <Percent className="w-4 h-4 absolute left-3 top-2.5 text-amber-600" />
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={form.persenDiskon ?? 50}
+                        onChange={(e) =>
+                          setForm({ ...form, persenDiskon: Number(e.target.value) || 0 })
+                        }
+                        className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-amber-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold text-amber-950"
+                      />
+                    </div>
+                    <p className="text-[10px] text-amber-700 mt-1">
+                      Contoh: 50 untuk diskon 50%
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-amber-950 mb-1">
+                      Kuota Maksimal Pendaftar Pertama
+                    </label>
+                    <div className="relative">
+                      <Tag className="w-4 h-4 absolute left-3 top-2.5 text-amber-600" />
+                      <input
+                        type="number"
+                        min="1"
+                        value={form.kuotaPendaftarDiskon ?? 15}
+                        onChange={(e) =>
+                          setForm({ ...form, kuotaPendaftarDiskon: Number(e.target.value) || 1 })
+                        }
+                        className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-amber-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold text-amber-950"
+                      />
+                    </div>
+                    <p className="text-[10px] text-amber-700 mt-1">
+                      Contoh: 15 untuk 15 pendaftar pertama
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-amber-950 mb-1">
+                    Teks Iklan / Pengumuman Promo pada Chat
+                  </label>
+                  <input
+                    type="text"
+                    value={
+                      form.pesanIklanPromo ??
+                      `PROMO SPESIAL: Potongan Biaya Pendaftaran ${form.persenDiskon || 50}% untuk ${form.kuotaPendaftarDiskon || 15} Pendaftar Pertama!`
+                    }
+                    onChange={(e) => setForm({ ...form, pesanIklanPromo: e.target.value })}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-amber-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-800"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Live Preview Box */}

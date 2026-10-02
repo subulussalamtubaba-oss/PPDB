@@ -440,6 +440,11 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                         >
                           Bayar: {item.statusPembayaran}
                         </span>
+                        {item.statusPembayaran === 'Sudah' && item.metodeTransfer && (
+                          <span className="block text-[9px] text-slate-500 font-medium truncate max-w-[120px]" title={`${item.metodeTransfer} - Rp ${item.nominalTransfer || ''} (${item.namaPengirimTransfer || ''})`}>
+                            {item.metodeTransfer} • {item.nominalTransfer ? `Rp ${item.nominalTransfer}` : ''}
+                          </span>
+                        )}
                       </div>
                       <div>
                         <span

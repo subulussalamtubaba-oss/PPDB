@@ -58,6 +58,10 @@ export const ApplicantDetailModal: React.FC<ApplicantDetailModalProps> = ({
     nisn: applicant?.nisn || '',
     pipSebelumnya: applicant?.pipSebelumnya || 'Tidak',
     statusPembayaran: applicant?.statusPembayaran || 'Belum',
+    waktuTransfer: applicant?.waktuTransfer || '',
+    metodeTransfer: applicant?.metodeTransfer || '',
+    namaPengirimTransfer: applicant?.namaPengirimTransfer || '',
+    nominalTransfer: applicant?.nominalTransfer || '',
     statusVerifikasi: applicant?.statusVerifikasi || ('MENUNGGU VERIFIKASI' as VerificationStatus),
   });
 
@@ -299,6 +303,34 @@ export const ApplicantDetailModal: React.FC<ApplicantDetailModalProps> = ({
                   </span>
                 </div>
               </div>
+
+              {/* Rincian Konfirmasi Transfer Pembayaran jika ada */}
+              {applicant.statusPembayaran === 'Sudah' && (applicant.nominalTransfer || applicant.metodeTransfer) && (
+                <div className="bg-emerald-50/70 border border-emerald-200/90 rounded-xl p-3.5 space-y-1.5 text-xs">
+                  <div className="flex items-center space-x-1.5 font-bold text-emerald-950">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Rincian Konfirmasi Transfer Biaya Pendaftaran:</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-slate-700">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">Nominal Transfer</span>
+                      <span className="font-bold text-emerald-900">Rp {applicant.nominalTransfer || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">Bank / E-Wallet</span>
+                      <span className="font-semibold text-slate-800">{applicant.metodeTransfer || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">Nama Pengirim</span>
+                      <span className="font-semibold text-slate-800">{applicant.namaPengirimTransfer || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">Waktu Transfer</span>
+                      <span className="font-medium text-slate-800">{applicant.waktuTransfer || '-'}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Verification Assessment Notes */}
               <div className="border border-slate-200 rounded-xl p-4 space-y-2">
@@ -569,6 +601,51 @@ export const ApplicantDetailModal: React.FC<ApplicantDetailModalProps> = ({
                     <option value="Belum">Belum Membayar</option>
                   </select>
                 </div>
+
+                {editForm.statusPembayaran === 'Sudah' && (
+                  <>
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">Nominal Transfer (Rp)</label>
+                      <input
+                        type="text"
+                        value={editForm.nominalTransfer}
+                        onChange={(e) => setEditForm({ ...editForm, nominalTransfer: e.target.value })}
+                        placeholder="Contoh: 150.000"
+                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">Saluran / Bank / E-Wallet</label>
+                      <input
+                        type="text"
+                        value={editForm.metodeTransfer}
+                        onChange={(e) => setEditForm({ ...editForm, metodeTransfer: e.target.value })}
+                        placeholder="Contoh: Bank BRI / DANA"
+                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">Nama Pemilik Rekening Pengirim</label>
+                      <input
+                        type="text"
+                        value={editForm.namaPengirimTransfer}
+                        onChange={(e) => setEditForm({ ...editForm, namaPengirimTransfer: e.target.value })}
+                        placeholder="Nama pemilik rekening"
+                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">Waktu / Tanggal Transfer</label>
+                      <input
+                        type="text"
+                        value={editForm.waktuTransfer}
+                        onChange={(e) => setEditForm({ ...editForm, waktuTransfer: e.target.value })}
+                        placeholder="Contoh: 01-10-2026 10:15 WIB"
+                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="flex justify-end pt-3">
