@@ -338,15 +338,46 @@ export const AcademicYearModal: React.FC<AcademicYearModalProps> = ({
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          if (file.size > 2 * 1024 * 1024) {
-                            alert('Ukuran gambar logo maksimal 2MB.');
+                          if (file.size > 8 * 1024 * 1024) {
+                            alert('Ukuran gambar maksimal 8MB.');
                             return;
                           }
                           const reader = new FileReader();
                           reader.onload = (event) => {
-                            if (event.target?.result) {
-                              setForm({ ...form, logoUrl: event.target.result as string });
-                            }
+                            const rawDataUrl = event.target?.result as string;
+                            if (!rawDataUrl) return;
+
+                            // Compress and resize image using canvas to max 400x400
+                            const img = new window.Image();
+                            img.onload = () => {
+                              const canvas = document.createElement('canvas');
+                              let width = img.width;
+                              let height = img.height;
+                              const maxSize = 400;
+
+                              if (width > height && width > maxSize) {
+                                height = Math.round((height * maxSize) / width);
+                                width = maxSize;
+                              } else if (height > maxSize) {
+                                width = Math.round((width * maxSize) / height);
+                                height = maxSize;
+                              }
+
+                              canvas.width = width;
+                              canvas.height = height;
+                              const ctx = canvas.getContext('2d');
+                              if (ctx) {
+                                ctx.drawImage(img, 0, 0, width, height);
+                                const optimizedUrl = canvas.toDataURL('image/png', 0.9);
+                                setForm((prev) => ({ ...prev, logoUrl: optimizedUrl }));
+                              } else {
+                                setForm((prev) => ({ ...prev, logoUrl: rawDataUrl }));
+                              }
+                            };
+                            img.onerror = () => {
+                              setForm((prev) => ({ ...prev, logoUrl: rawDataUrl }));
+                            };
+                            img.src = rawDataUrl;
                           };
                           reader.readAsDataURL(file);
                         }
