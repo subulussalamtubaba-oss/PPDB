@@ -14,6 +14,9 @@ import {
   Tag,
   Percent,
   Flame,
+  Image,
+  Upload,
+  Trash2,
 } from 'lucide-react';
 import { AcademicYearConfig, DEFAULT_ACADEMIC_YEAR_CONFIG } from '../types';
 
@@ -275,6 +278,94 @@ export const AcademicYearModal: React.FC<AcademicYearModalProps> = ({
                   placeholder="Pondok Pesantren & Madrasah Subulussalam"
                   className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Logo Resmi Pondok Pesantren */}
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                  <Image className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900">
+                    Logo Resmi Pondok Pesantren
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Ganti icon bawaan dengan logo asli pondok pesantren (muncul di header chat & meja admin)
+                  </p>
+                </div>
+              </div>
+              {form.logoUrl && (
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, logoUrl: '' })}
+                  className="text-red-500 hover:text-red-700 text-xs flex items-center space-x-1 px-2 py-1 rounded-lg hover:bg-red-50 transition"
+                  title="Hapus logo kustom (kembali ke icon bawaan)"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Hapus Logo</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center pt-1 border-t border-slate-200">
+              {/* Preview Logo */}
+              <div className="w-16 h-16 rounded-2xl bg-white border-2 border-dashed border-emerald-400 flex items-center justify-center overflow-hidden shrink-0 shadow-xs relative">
+                {form.logoUrl ? (
+                  <img
+                    src={form.logoUrl}
+                    alt="Logo Pondok"
+                    className="w-full h-full object-contain p-1"
+                  />
+                ) : (
+                  <School className="w-8 h-8 text-emerald-600" />
+                )}
+              </div>
+
+              {/* Upload & URL input */}
+              <div className="flex-1 w-full space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  <label className="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs transition">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Unggah File Logo (PNG/JPG)</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 2 * 1024 * 1024) {
+                            alert('Ukuran gambar logo maksimal 2MB.');
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            if (event.target?.result) {
+                              setForm({ ...form, logoUrl: event.target.result as string });
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                  <span className="text-[11px] text-slate-400 self-center">atau masukkan URL gambar:</span>
+                </div>
+
+                <input
+                  type="url"
+                  value={form.logoUrl || ''}
+                  onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
+                  placeholder="https://contoh-domain.com/logo-subulussalam.png"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-slate-700"
+                />
+                <p className="text-[10px] text-slate-500">
+                  Tip: Anda bisa mengunggah file langsung dari HP/komputer atau menempelkan tautan link gambar logo pondok.
+                </p>
               </div>
             </div>
           </div>

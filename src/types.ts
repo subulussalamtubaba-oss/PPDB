@@ -62,6 +62,7 @@ export interface AcademicYearConfig {
   kontakAdminWa: string; // e.g. "085832297239"
   kodeTahunId: string; // e.g. "2026"
   namaSekolah: string; // e.g. "Pondok Pesantren & Madrasah Subulussalam"
+  logoUrl?: string; // URL gambar atau Data URL logo resmi pondok pesantren
   // Fitur Iklan Promo Potongan Biaya Pendaftaran
   promoDiskonAktif?: boolean;
   persenDiskon?: number; // e.g. 50 (50%)
@@ -77,6 +78,7 @@ export const DEFAULT_ACADEMIC_YEAR_CONFIG: AcademicYearConfig = {
   kontakAdminWa: '085832297239',
   kodeTahunId: '2026',
   namaSekolah: 'Pondok Pesantren & Madrasah Subulussalam',
+  logoUrl: '',
   promoDiskonAktif: true,
   persenDiskon: 50,
   kuotaPendaftarDiskon: 15,

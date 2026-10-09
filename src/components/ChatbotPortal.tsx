@@ -1132,8 +1132,16 @@ ${cfg.rekeningPembayaran}`;
         <header className="sticky top-0 z-20 bg-emerald-800 text-white px-3.5 sm:px-5 py-3 flex items-center justify-between shadow-xs">
           <div className="flex items-center space-x-3 min-w-0">
             <div className="relative shrink-0">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-emerald-700 border-2 border-emerald-400/70 flex items-center justify-center text-white shadow-xs">
-                <School className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-100" />
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-emerald-700 border-2 border-emerald-400/70 flex items-center justify-center text-white shadow-xs overflow-hidden">
+                {cfg.logoUrl ? (
+                  <img
+                    src={cfg.logoUrl}
+                    alt={cfg.namaSekolah}
+                    className="w-full h-full object-contain p-0.5"
+                  />
+                ) : (
+                  <School className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-100" />
+                )}
               </div>
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-emerald-800 rounded-full" />
             </div>
