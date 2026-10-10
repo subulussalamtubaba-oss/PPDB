@@ -20,6 +20,10 @@ import {
   buildVerificationSuccessMessage,
   buildVerificationRevisionMessage,
   buildApplicantNoticeToCommitteeMessage,
+  buildBerkasDiterimaMessage,
+  buildKurangPersyaratanMessage,
+  buildJadwalTesMessage,
+  buildPengingatPembayaranMessage,
   getWhatsAppWebLink,
   sendApplicantWhatsAppNotification,
 } from '../services/whatsappNotification';
@@ -44,8 +48,15 @@ export const ApplicantDetailModal: React.FC<ApplicantDetailModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'NOTIFIKASI_WA' | 'EDIT_DATA' | 'RAW_MESSAGE'>('OVERVIEW');
   const [notifTemplate, setNotifTemplate] = useState<
-    'KONFIRMASI_PENDAFTARAN' | 'VERIFIKASI_BERHASIL' | 'PERBAIKAN_BERKAS' | 'PEMBERITAHUAN_PANITIA'
-  >(applicant?.statusVerifikasi === 'TERVERIFIKASI' ? 'VERIFIKASI_BERHASIL' : 'KONFIRMASI_PENDAFTARAN');
+    | 'KONFIRMASI_PENDAFTARAN'
+    | 'VERIFIKASI_BERHASIL'
+    | 'PERBAIKAN_BERKAS'
+    | 'BERKAS_DITERIMA'
+    | 'KURANG_PERSYARATAN'
+    | 'JADWAL_TES'
+    | 'PENGINGAT_BIAYA'
+    | 'PEMBERITAHUAN_PANITIA'
+  >(applicant?.statusVerifikasi === 'TERVERIFIKASI' ? 'BERKAS_DITERIMA' : 'KONFIRMASI_PENDAFTARAN');
 
   // Editable fields state
   const [editForm, setEditForm] = useState({
@@ -80,15 +91,29 @@ export const ApplicantDetailModal: React.FC<ApplicantDetailModalProps> = ({
   if (!applicant) return null;
 
   const handleTemplateChange = (
-    tmpl: 'KONFIRMASI_PENDAFTARAN' | 'VERIFIKASI_BERHASIL' | 'PERBAIKAN_BERKAS' | 'PEMBERITAHUAN_PANITIA'
+    tmpl:
+      | 'KONFIRMASI_PENDAFTARAN'
+      | 'VERIFIKASI_BERHASIL'
+      | 'PERBAIKAN_BERKAS'
+      | 'BERKAS_DITERIMA'
+      | 'KURANG_PERSYARATAN'
+      | 'JADWAL_TES'
+      | 'PENGINGAT_BIAYA'
+      | 'PEMBERITAHUAN_PANITIA'
   ) => {
     setNotifTemplate(tmpl);
     if (tmpl === 'KONFIRMASI_PENDAFTARAN') {
       setCustomMessage(buildRegistrationConfirmationMessage(applicant));
+    } else if (tmpl === 'BERKAS_DITERIMA') {
+      setCustomMessage(buildBerkasDiterimaMessage(applicant));
+    } else if (tmpl === 'KURANG_PERSYARATAN' || tmpl === 'PERBAIKAN_BERKAS') {
+      setCustomMessage(buildKurangPersyaratanMessage(applicant));
+    } else if (tmpl === 'JADWAL_TES') {
+      setCustomMessage(buildJadwalTesMessage(applicant));
+    } else if (tmpl === 'PENGINGAT_BIAYA') {
+      setCustomMessage(buildPengingatPembayaranMessage(applicant));
     } else if (tmpl === 'VERIFIKASI_BERHASIL') {
       setCustomMessage(buildVerificationSuccessMessage(applicant));
-    } else if (tmpl === 'PERBAIKAN_BERKAS') {
-      setCustomMessage(buildVerificationRevisionMessage(applicant));
     } else {
       setCustomMessage(buildApplicantNoticeToCommitteeMessage(applicant));
     }
@@ -365,7 +390,58 @@ export const ApplicantDetailModal: React.FC<ApplicantDetailModalProps> = ({
                 <span className="font-semibold text-slate-700 block mb-2">
                   Pilih Template Notifikasi WhatsApp Resmi:
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <button
+                    onClick={() => handleTemplateChange('BERKAS_DITERIMA')}
+                    className={`p-3 rounded-xl border text-left transition ${
+                      notifTemplate === 'BERKAS_DITERIMA'
+                        ? 'bg-emerald-50 border-emerald-500 ring-2 ring-emerald-500/20'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-900 block">✓ Berkas Diterima</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold">Lengkap</span>
+                    </div>
+                    <span className="text-[11px] text-slate-500 block mt-1">
+                      Pemberitahuan berkas valid & lengkap
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => handleTemplateChange('KURANG_PERSYARATAN')}
+                    className={`p-3 rounded-xl border text-left transition ${
+                      notifTemplate === 'KURANG_PERSYARATAN' || notifTemplate === 'PERBAIKAN_BERKAS'
+                        ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-500/20'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-900 block">⚠️ Kurang Persyaratan</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold">Revisi</span>
+                    </div>
+                    <span className="text-[11px] text-slate-500 block mt-1">
+                      Rincian syarat/dokumen yang perlu dilengkapi
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => handleTemplateChange('JADWAL_TES')}
+                    className={`p-3 rounded-xl border text-left transition ${
+                      notifTemplate === 'JADWAL_TES'
+                        ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500/20'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-900 block">🗓️ Jadwal Tes</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-semibold">Ujian</span>
+                    </div>
+                    <span className="text-[11px] text-slate-500 block mt-1">
+                      Undangan tes seleksi, waktu & tempat ujian
+                    </span>
+                  </button>
+
                   <button
                     onClick={() => handleTemplateChange('KONFIRMASI_PENDAFTARAN')}
                     className={`p-3 rounded-xl border text-left transition ${
@@ -375,45 +451,28 @@ export const ApplicantDetailModal: React.FC<ApplicantDetailModalProps> = ({
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-900 block">1. Konfirmasi ID</span>
+                      <span className="font-bold text-slate-900 block">📌 Bukti ID Registrasi</span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">Ke Wali</span>
                     </div>
                     <span className="text-[11px] text-slate-500 block mt-1">
-                      Surat tanda terima pendaftaran & ID resmi
+                      Kirim tanda terima registrasi & ID santri
                     </span>
                   </button>
 
                   <button
-                    onClick={() => handleTemplateChange('VERIFIKASI_BERHASIL')}
+                    onClick={() => handleTemplateChange('PENGINGAT_BIAYA')}
                     className={`p-3 rounded-xl border text-left transition ${
-                      notifTemplate === 'VERIFIKASI_BERHASIL'
-                        ? 'bg-emerald-50 border-emerald-500 ring-2 ring-emerald-500/20'
+                      notifTemplate === 'PENGINGAT_BIAYA'
+                        ? 'bg-purple-50 border-purple-500 ring-2 ring-purple-500/20'
                         : 'bg-white border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-900 block">2. Lolos Berkas</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">Ke Wali</span>
+                      <span className="font-bold text-slate-900 block">💳 Pengingat Biaya</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 font-semibold">Rekening</span>
                     </div>
                     <span className="text-[11px] text-slate-500 block mt-1">
-                      Pemberitahuan verifikasi lolos & tahapan lanjut
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => handleTemplateChange('PERBAIKAN_BERKAS')}
-                    className={`p-3 rounded-xl border text-left transition ${
-                      notifTemplate === 'PERBAIKAN_BERKAS'
-                        ? 'bg-emerald-50 border-emerald-500 ring-2 ring-emerald-500/20'
-                        : 'bg-white border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-900 block">3. Revisi Berkas</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">Ke Wali</span>
-                    </div>
-                    <span className="text-[11px] text-slate-500 block mt-1">
-                      Permintaan revisi NISN/data kurang lengkap
+                      Nomor rekening & nominal pendaftaran
                     </span>
                   </button>
 
@@ -421,16 +480,16 @@ export const ApplicantDetailModal: React.FC<ApplicantDetailModalProps> = ({
                     onClick={() => handleTemplateChange('PEMBERITAHUAN_PANITIA')}
                     className={`p-3 rounded-xl border text-left transition ${
                       notifTemplate === 'PEMBERITAHUAN_PANITIA'
-                        ? 'bg-emerald-50 border-emerald-500 ring-2 ring-emerald-500/20'
+                        ? 'bg-slate-100 border-slate-500 ring-2 ring-slate-500/20'
                         : 'bg-white border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-900 block">4. Format Panitia</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">Ke Panitia</span>
+                      <span className="font-bold text-slate-900 block">📋 Format Arsip</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-medium">Panitia</span>
                     </div>
                     <span className="text-[11px] text-slate-500 block mt-1">
-                      Surat pemberitahuan pendaftaran santri baru
+                      Format rekapitulasi data pendaftar baru
                     </span>
                   </button>
                 </div>

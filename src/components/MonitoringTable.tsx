@@ -16,12 +16,27 @@ import {
   ExternalLink,
   Check,
   ChevronDown,
+  ChevronUp,
   Sparkles,
   Users,
   RefreshCw,
+  Calendar,
+  CreditCard,
+  FileText,
+  Zap,
+  PhoneForwarded,
+  CheckCheck,
 } from 'lucide-react';
-import { Pendaftar, VerificationStatus } from '../types';
-import { sendApplicantWhatsAppNotification } from '../services/whatsappNotification';
+import { Pendaftar, VerificationStatus, AcademicYearConfig } from '../types';
+import {
+  sendApplicantWhatsAppNotification,
+  buildBerkasDiterimaMessage,
+  buildKurangPersyaratanMessage,
+  buildJadwalTesMessage,
+  buildPengingatPembayaranMessage,
+  buildRegistrationConfirmationMessage,
+  getWhatsAppWebLink,
+} from '../services/whatsappNotification';
 
 interface MonitoringTableProps {
   applicants: Pendaftar[];
@@ -33,7 +48,15 @@ interface MonitoringTableProps {
   onExportExcel: (customList?: Pendaftar[]) => void;
   onSendNotification: (
     applicant: Pendaftar,
-    type: 'KONFIRMASI_PENDAFTARAN' | 'VERIFIKASI_BERHASIL' | 'PERBAIKAN_BERKAS'
+    type:
+      | 'KONFIRMASI_PENDAFTARAN'
+      | 'VERIFIKASI_BERHASIL'
+      | 'PERBAIKAN_BERKAS'
+      | 'BERKAS_DITERIMA'
+      | 'KURANG_PERSYARATAN'
+      | 'JADWAL_TES'
+      | 'PENGINGAT_BIAYA'
+      | 'CUSTOM'
   ) => void;
   isSheetsConnected: boolean;
   activeFilter: string;
@@ -41,6 +64,7 @@ interface MonitoringTableProps {
   onFetchFromSheets?: () => Promise<void>;
   isFetchingFromSheets?: boolean;
   onOpenSheetsModal?: () => void;
+  academicYearConfig?: AcademicYearConfig;
 }
 
 export const MonitoringTable: React.FC<MonitoringTableProps> = ({
@@ -58,12 +82,18 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
   onFetchFromSheets,
   isFetchingFromSheets = false,
   onOpenSheetsModal,
+  academicYearConfig,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [applicantToDelete, setApplicantToDelete] = useState<Pendaftar | null>(null);
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [quickReplyApplicant, setQuickReplyApplicant] = useState<Pendaftar | null>(null);
+  const [customReplyCatatan, setCustomReplyCatatan] = useState('');
+  const [selectedQuickTemplate, setSelectedQuickTemplate] = useState<
+    'BERKAS_DITERIMA' | 'KURANG_PERSYARATAN' | 'JADWAL_TES' | 'PENGINGAT_BIAYA' | 'KONFIRMASI_PENDAFTARAN'
+  >('BERKAS_DITERIMA');
 
   // Filter and search
   const filteredApplicants = useMemo(() => {
@@ -497,30 +527,24 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-end space-x-1">
-                      {/* Kirim Konfirmasi ID */}
+                      {/* Tombol Balas Cepat WA (Pilihan Template Otomatis) */}
                       <button
-                        onClick={() => onSendNotification(item, 'KONFIRMASI_PENDAFTARAN')}
-                        className={`p-1.5 rounded-lg border transition ${
-                          item.notifPendaftaranTerkirim
-                            ? 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-emerald-50 hover:text-emerald-700'
-                            : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700'
-                        }`}
-                        title="Kirim Notifikasi Konfirmasi WA (dengan No ID Unik)"
+                        onClick={() => {
+                          setQuickReplyApplicant(item);
+                          setSelectedQuickTemplate(
+                            item.statusVerifikasi === 'TERVERIFIKASI'
+                              ? 'BERKAS_DITERIMA'
+                              : item.statusVerifikasi === 'PERLU PERBAIKAN'
+                              ? 'KURANG_PERSYARATAN'
+                              : 'BERKAS_DITERIMA'
+                          );
+                          setCustomReplyCatatan('');
+                        }}
+                        className="px-2 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center space-x-1 transition shadow-2xs"
+                        title="Balas Cepat WhatsApp (Pilih template: Berkas Diterima, Kurang Persyaratan, Jadwal Tes, dll)"
                       >
-                        <Send className="w-3.5 h-3.5" />
-                      </button>
-
-                      {/* Kirim Verifikasi Lolos */}
-                      <button
-                        onClick={() => onSendNotification(item, 'VERIFIKASI_BERHASIL')}
-                        className={`p-1.5 rounded-lg border transition ${
-                          item.notifVerifikasiTerkirim
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
-                        }`}
-                        title="Kirim Notifikasi Lolos Verifikasi Berkas via WhatsApp"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                        <span className="hidden xl:inline text-[11px]">Balas WA</span>
                       </button>
 
                       {/* Detail Modal */}
@@ -666,6 +690,303 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Ya, Hapus Semua Terpilih</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL BALAS CEPAT WHATSAPP PANITIA (Quick Reply Template) */}
+      {quickReplyApplicant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-emerald-800 to-slate-900 text-white px-5 py-4 flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-600/40 border border-emerald-400/30 flex items-center justify-center text-emerald-300">
+                  <Zap className="w-5 h-5 fill-amber-300 text-amber-300" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center space-x-1.5">
+                    <span>Template Balasan Cepat WhatsApp</span>
+                  </h3>
+                  <p className="text-[11px] text-emerald-200">
+                    Kirim ke: <strong>{quickReplyApplicant.namaLengkap}</strong> ({quickReplyApplicant.noWa})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setQuickReplyApplicant(null)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs">
+              {/* Info Target Santri */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Calon Santri & Wali</span>
+                  <p className="font-bold text-slate-900 text-sm">{quickReplyApplicant.namaLengkap}</p>
+                  <p className="text-slate-500 text-[11px]">Wali: {quickReplyApplicant.namaWali} • Asal: {quickReplyApplicant.asalSekolah}</p>
+                </div>
+                <div className="text-right">
+                  <span className="font-mono text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold text-xs block">
+                    {quickReplyApplicant.id}
+                  </span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                    Status: {quickReplyApplicant.statusVerifikasi}
+                  </span>
+                </div>
+              </div>
+
+              {/* Template Buttons Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-2">
+                  Pilih Pesan / Jawaban Cepat Panitia:
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* 1. Berkas Diterima */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedQuickTemplate('BERKAS_DITERIMA')}
+                    className={`p-3 rounded-xl border text-left transition flex items-start space-x-2.5 ${
+                      selectedQuickTemplate === 'BERKAS_DITERIMA'
+                        ? 'bg-emerald-50 border-emerald-600 ring-2 ring-emerald-600/20 text-emerald-950'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-bold flex items-center justify-between">
+                        <span>1. Berkas Diterima</span>
+                        <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-semibold">Lengkap</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                        Konfirmasi berkas santri telah valid, lengkap, dan diterima resmi panitia.
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* 2. Kurang Persyaratan */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedQuickTemplate('KURANG_PERSYARATAN')}
+                    className={`p-3 rounded-xl border text-left transition flex items-start space-x-2.5 ${
+                      selectedQuickTemplate === 'KURANG_PERSYARATAN'
+                        ? 'bg-amber-50 border-amber-600 ring-2 ring-amber-600/20 text-amber-950'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                    }`}
+                  >
+                    <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-bold flex items-center justify-between">
+                        <span>2. Kurang Persyaratan</span>
+                        <span className="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-semibold">Revisi</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                        Permintaan melengkapi berkas ijazah, NISN, KK, atau berkas kurang lainnya.
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* 3. Jadwal Tes */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedQuickTemplate('JADWAL_TES')}
+                    className={`p-3 rounded-xl border text-left transition flex items-start space-x-2.5 ${
+                      selectedQuickTemplate === 'JADWAL_TES'
+                        ? 'bg-blue-50 border-blue-600 ring-2 ring-blue-600/20 text-blue-950'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                    }`}
+                  >
+                    <Calendar className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-bold flex items-center justify-between">
+                        <span>3. Jadwal Tes & Seleksi</span>
+                        <span className="text-[9px] bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded font-semibold">Ujian</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                        Undangan resmi tes observasi Al-Qur'an, wawancara, dan tempat tes.
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* 4. Pengingat Biaya / Konfirmasi ID */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedQuickTemplate('PENGINGAT_BIAYA')}
+                    className={`p-3 rounded-xl border text-left transition flex items-start space-x-2.5 ${
+                      selectedQuickTemplate === 'PENGINGAT_BIAYA'
+                        ? 'bg-purple-50 border-purple-600 ring-2 ring-purple-600/20 text-purple-950'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                    }`}
+                  >
+                    <CreditCard className="w-4 h-4 text-purple-600 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-bold flex items-center justify-between">
+                        <span>4. Pengingat Biaya Rekening</span>
+                        <span className="text-[9px] bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded font-semibold">Transfer</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                        Pesan pengingat transfer administrasi resmi & nomor rekening ponpes.
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Input Catatan Tambahan (Khusus Template Kurang Persyaratan) */}
+              {selectedQuickTemplate === 'KURANG_PERSYARATAN' && (
+                <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1.5">
+                  <label className="block text-[11px] font-bold text-amber-900">
+                    Catatan Kekurangan Khusus (Opsional):
+                  </label>
+                  <input
+                    type="text"
+                    value={customReplyCatatan}
+                    onChange={(e) => setCustomReplyCatatan(e.target.value)}
+                    placeholder="Contoh: Foto Akta Kelahiran buram, mohon kirim ulang foto yang jelas"
+                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-amber-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800"
+                  />
+                  <p className="text-[10px] text-amber-700">
+                    Biarkan kosong jika ingin menggunakan evaluasi kekurangan bawaan dari sistem.
+                  </p>
+                </div>
+              )}
+
+              {/* Pratinjau Teks WhatsApp */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-slate-700">Pratinjau Pesan yang Akan Dikirim:</span>
+                  <span className="text-slate-400">Penerima: {quickReplyApplicant.noWa}</span>
+                </div>
+                <div className="p-3 bg-slate-900 text-slate-100 font-mono text-[11px] rounded-xl whitespace-pre-wrap max-h-44 overflow-y-auto leading-relaxed border border-slate-800 select-all">
+                  {selectedQuickTemplate === 'BERKAS_DITERIMA' &&
+                    buildBerkasDiterimaMessage(
+                      quickReplyApplicant,
+                      academicYearConfig?.namaSekolah || 'Pondok Pesantren & Madrasah Subulussalam',
+                      academicYearConfig?.tahunPelajaran || '2026/2027'
+                    )}
+                  {selectedQuickTemplate === 'KURANG_PERSYARATAN' &&
+                    buildKurangPersyaratanMessage(
+                      quickReplyApplicant,
+                      academicYearConfig?.namaSekolah || 'Pondok Pesantren & Madrasah Subulussalam',
+                      customReplyCatatan
+                    )}
+                  {selectedQuickTemplate === 'JADWAL_TES' &&
+                    buildJadwalTesMessage(
+                      quickReplyApplicant,
+                      academicYearConfig?.namaSekolah || 'Pondok Pesantren & Madrasah Subulussalam'
+                    )}
+                  {selectedQuickTemplate === 'PENGINGAT_BIAYA' &&
+                    buildPengingatPembayaranMessage(
+                      quickReplyApplicant,
+                      academicYearConfig?.namaSekolah || 'Pondok Pesantren & Madrasah Subulussalam',
+                      academicYearConfig?.biayaPendaftaran || '150.000',
+                      academicYearConfig?.rekeningPembayaran || '7702 0102 2580 530 a/n ponpes Subulussalam (Bank BRI)'
+                    )}
+                  {selectedQuickTemplate === 'KONFIRMASI_PENDAFTARAN' &&
+                    buildRegistrationConfirmationMessage(
+                      quickReplyApplicant,
+                      academicYearConfig?.namaSekolah || 'Pondok Pesantren & Madrasah Subulussalam',
+                      academicYearConfig?.tahunPelajaran || '2026/2027'
+                    )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setQuickReplyApplicant(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition"
+              >
+                Batal
+              </button>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    let msg = '';
+                    if (selectedQuickTemplate === 'BERKAS_DITERIMA') {
+                      msg = buildBerkasDiterimaMessage(
+                        quickReplyApplicant,
+                        academicYearConfig?.namaSekolah,
+                        academicYearConfig?.tahunPelajaran
+                      );
+                    } else if (selectedQuickTemplate === 'KURANG_PERSYARATAN') {
+                      msg = buildKurangPersyaratanMessage(
+                        quickReplyApplicant,
+                        academicYearConfig?.namaSekolah,
+                        customReplyCatatan
+                      );
+                    } else if (selectedQuickTemplate === 'JADWAL_TES') {
+                      msg = buildJadwalTesMessage(quickReplyApplicant, academicYearConfig?.namaSekolah);
+                    } else if (selectedQuickTemplate === 'PENGINGAT_BIAYA') {
+                      msg = buildPengingatPembayaranMessage(
+                        quickReplyApplicant,
+                        academicYearConfig?.namaSekolah,
+                        academicYearConfig?.biayaPendaftaran,
+                        academicYearConfig?.rekeningPembayaran
+                      );
+                    } else {
+                      msg = buildRegistrationConfirmationMessage(quickReplyApplicant, academicYearConfig?.namaSekolah);
+                    }
+                    navigator.clipboard.writeText(msg);
+                    alert('Teks pesan WhatsApp berhasil disalin ke clipboard!');
+                  }}
+                  className="px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center space-x-1"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Salin Teks</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    let msg = '';
+                    if (selectedQuickTemplate === 'BERKAS_DITERIMA') {
+                      msg = buildBerkasDiterimaMessage(
+                        quickReplyApplicant,
+                        academicYearConfig?.namaSekolah,
+                        academicYearConfig?.tahunPelajaran
+                      );
+                    } else if (selectedQuickTemplate === 'KURANG_PERSYARATAN') {
+                      msg = buildKurangPersyaratanMessage(
+                        quickReplyApplicant,
+                        academicYearConfig?.namaSekolah,
+                        customReplyCatatan
+                      );
+                    } else if (selectedQuickTemplate === 'JADWAL_TES') {
+                      msg = buildJadwalTesMessage(quickReplyApplicant, academicYearConfig?.namaSekolah);
+                    } else if (selectedQuickTemplate === 'PENGINGAT_BIAYA') {
+                      msg = buildPengingatPembayaranMessage(
+                        quickReplyApplicant,
+                        academicYearConfig?.namaSekolah,
+                        academicYearConfig?.biayaPendaftaran,
+                        academicYearConfig?.rekeningPembayaran
+                      );
+                    } else {
+                      msg = buildRegistrationConfirmationMessage(quickReplyApplicant, academicYearConfig?.namaSekolah);
+                    }
+
+                    // Send via notification callback
+                    onSendNotification(quickReplyApplicant, selectedQuickTemplate);
+                    setQuickReplyApplicant(null);
+                  }}
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition flex items-center space-x-1.5"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Buka WhatsApp & Kirim</span>
                 </button>
               </div>
             </div>

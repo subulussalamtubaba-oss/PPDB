@@ -646,12 +646,20 @@ export default function App() {
   // Send WhatsApp Notification directly
   const handleSendNotification = (
     applicant: Pendaftar,
-    type: 'KONFIRMASI_PENDAFTARAN' | 'VERIFIKASI_BERHASIL' | 'PERBAIKAN_BERKAS'
+    type:
+      | 'KONFIRMASI_PENDAFTARAN'
+      | 'VERIFIKASI_BERHASIL'
+      | 'PERBAIKAN_BERKAS'
+      | 'BERKAS_DITERIMA'
+      | 'KURANG_PERSYARATAN'
+      | 'JADWAL_TES'
+      | 'PENGINGAT_BIAYA'
+      | 'CUSTOM'
   ) => {
     const { log } = sendApplicantWhatsAppNotification(
       applicant,
       type,
-      'PPDB Subulussalam',
+      academicYearConfig.namaSekolah || 'Pondok Pesantren & Madrasah Subulussalam',
       true
     );
 
@@ -665,7 +673,9 @@ export default function App() {
             notifPendaftaranTerkirim:
               type === 'KONFIRMASI_PENDAFTARAN' ? true : a.notifPendaftaranTerkirim,
             notifVerifikasiTerkirim:
-              type === 'VERIFIKASI_BERHASIL' ? true : a.notifVerifikasiTerkirim,
+              type === 'VERIFIKASI_BERHASIL' || type === 'BERKAS_DITERIMA'
+                ? true
+                : a.notifVerifikasiTerkirim,
             lastNotifSentAt: new Date().toLocaleTimeString('id-ID', {
               hour: '2-digit',
               minute: '2-digit',
@@ -676,10 +686,28 @@ export default function App() {
       })
     );
 
+    const getTitle = () => {
+      switch (type) {
+        case 'BERKAS_DITERIMA':
+          return 'Berkas Diterima & Lengkap';
+        case 'KURANG_PERSYARATAN':
+        case 'PERBAIKAN_BERKAS':
+          return 'Kurang Persyaratan';
+        case 'JADWAL_TES':
+          return 'Undangan Jadwal Tes Seleksi';
+        case 'PENGINGAT_BIAYA':
+          return 'Pengingat Biaya Pendaftaran';
+        case 'VERIFIKASI_BERHASIL':
+          return 'Verifikasi Berkas Berhasil';
+        default:
+          return 'Konfirmasi ID Pendaftaran';
+      }
+    };
+
     showToast(
       'success',
       'Membuka WhatsApp...',
-      `Mengirim pesan ${type === 'KONFIRMASI_PENDAFTARAN' ? 'Konfirmasi Pendaftaran' : 'Verifikasi Berkas'} ke ${applicant.namaLengkap}`
+      `Mengirim template "${getTitle()}" ke ${applicant.namaLengkap}`
     );
   };
 

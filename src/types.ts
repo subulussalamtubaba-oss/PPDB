@@ -48,7 +48,15 @@ export interface WhatsAppNotificationLog {
   pendaftarId: string;
   namaLengkap: string;
   noWa: string;
-  type: 'KONFIRMASI_PENDAFTARAN' | 'VERIFIKASI_BERHASIL' | 'PERBAIKAN_BERKAS';
+  type:
+    | 'KONFIRMASI_PENDAFTARAN'
+    | 'VERIFIKASI_BERHASIL'
+    | 'PERBAIKAN_BERKAS'
+    | 'BERKAS_DITERIMA'
+    | 'KURANG_PERSYARATAN'
+    | 'JADWAL_TES'
+    | 'PENGINGAT_BIAYA'
+    | 'CUSTOM';
   timestamp: string;
   messageText: string;
   status: 'TERKIRIM' | 'MENUNGGU' | 'GAGAL';
