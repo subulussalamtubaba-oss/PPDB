@@ -123,22 +123,55 @@ export default function App() {
   });
 
   const handleSaveAcademicYearConfig = async (cfg: AcademicYearConfig) => {
+    // 1. Immediately apply to local React state
     setAcademicYearConfig(cfg);
+
+    // 2. Persist to localStorage for instant reload protection
     try {
       localStorage.setItem('ppdb_academic_year_config', JSON.stringify(cfg));
-      await fetch('/api/settings', {
+    } catch {
+      // ignore
+    }
+
+    // 3. Send to server backend MongoDB database
+    try {
+      const response = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ academicYearConfig: cfg }),
       });
-    } catch {
-      // ignore
+
+      if (response.ok) {
+        const savedData = await response.json();
+        if (savedData?.academicYearConfig) {
+          setAcademicYearConfig(savedData.academicYearConfig);
+          try {
+            localStorage.setItem(
+              'ppdb_academic_year_config',
+              JSON.stringify(savedData.academicYearConfig)
+            );
+          } catch {}
+        }
+        showToast(
+          'success',
+          'Pengaturan Berhasil Disimpan Permanen!',
+          `Tahun Pelajaran ${cfg.tahunPelajaran} (Angkatan ${cfg.angkatan}) telah tersimpan ke database.`
+        );
+      } else {
+        const errText = await response.text();
+        showToast(
+          'error',
+          'Gagal Menyimpan ke Server',
+          `Pengaturan tersimpan lokal di browser, namun server mengembalikan kode: ${response.status} (${errText.slice(0, 80)})`
+        );
+      }
+    } catch (err: any) {
+      showToast(
+        'info',
+        'Tersimpan di Browser',
+        'Pengaturan tersimpan di browser Anda. Pastikan koneksi internet stabil untuk sinkronisasi ke server.'
+      );
     }
-    showToast(
-      'success',
-      'Tahun Pelajaran Berhasil Diperbarui',
-      `Aktif: ${cfg.tahunPelajaran} (Angkatan ${cfg.angkatan})`
-    );
   };
 
   const [toastMessage, setToastMessage] = useState<{

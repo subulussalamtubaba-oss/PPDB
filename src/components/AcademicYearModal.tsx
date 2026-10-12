@@ -17,6 +17,7 @@ import {
   Image,
   Upload,
   Trash2,
+  Loader2,
 } from 'lucide-react';
 import { AcademicYearConfig, DEFAULT_ACADEMIC_YEAR_CONFIG } from '../types';
 
@@ -24,7 +25,7 @@ interface AcademicYearModalProps {
   isOpen: boolean;
   onClose: () => void;
   config: AcademicYearConfig;
-  onSaveConfig: (config: AcademicYearConfig) => void;
+  onSaveConfig: (config: AcademicYearConfig) => Promise<boolean | void> | void;
 }
 
 export const AcademicYearModal: React.FC<AcademicYearModalProps> = ({
@@ -35,10 +36,12 @@ export const AcademicYearModal: React.FC<AcademicYearModalProps> = ({
 }) => {
   const [form, setForm] = useState<AcademicYearConfig>(config);
   const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setForm(config);
     setIsSaved(false);
+    setIsSaving(false);
   }, [config, isOpen]);
 
   if (!isOpen) return null;
@@ -63,14 +66,21 @@ export const AcademicYearModal: React.FC<AcademicYearModalProps> = ({
     }));
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSaveConfig(form);
-    setIsSaved(true);
-    setTimeout(() => {
-      setIsSaved(false);
-      onClose();
-    }, 1000);
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      await onSaveConfig(form);
+      setIsSaved(true);
+      setTimeout(() => {
+        setIsSaved(false);
+        setIsSaving(false);
+        onClose();
+      }, 700);
+    } catch {
+      setIsSaving(false);
+    }
   };
 
   const handleResetDefault = () => {
@@ -538,11 +548,23 @@ export const AcademicYearModal: React.FC<AcademicYearModalProps> = ({
             </button>
             <button
               type="button"
+              disabled={isSaving}
               onClick={handleSave}
-              className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition flex items-center space-x-1.5"
+              className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition flex items-center space-x-1.5 ${
+                isSaving ? 'bg-emerald-700 opacity-80 cursor-wait' : 'bg-emerald-600 hover:bg-emerald-700'
+              }`}
             >
-              <Save className="w-3.5 h-3.5" />
-              <span>Simpan Pengaturan</span>
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Menyimpan ke Database...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Simpan Pengaturan</span>
+                </>
+              )}
             </button>
           </div>
         </div>
