@@ -1108,7 +1108,7 @@ ${cfg.rekeningPembayaran}`;
     const text = buildApplicantNoticeToCommitteeMessage(applicant, cfg.namaSekolah, cfg.tahunPelajaran);
     const panitiaWa = cfg.kontakAdminWa.replace(/\D/g, '');
     const cleanPanitiaWa = panitiaWa.startsWith('0') ? '62' + panitiaWa.substring(1) : panitiaWa;
-    return `https://wa.me/${cleanPanitiaWa || '6285832297239'}?text=${encodeURIComponent(text)}`;
+    return `https://wa.me/${cleanPanitiaWa || '6281225865715'}?text=${encodeURIComponent(text)}`;
   };
 
   const handleCopyNotice = (applicant: Pendaftar) => {

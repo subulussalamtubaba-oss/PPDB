@@ -128,7 +128,7 @@ export const runAutomaticVerification = (
   }
 
   // 7. Validasi Nomor WhatsApp
-  // Support multiple numbers like 085832297239/085768219893 by validating the primary mobile number
+  // Support multiple numbers like 081225865715 by validating the primary mobile number
   const primaryWa = (data.noWa.split(/[/,;]/)[0] || '').trim();
   const cleanWa = primaryWa.replace(/\D/g, '').trim();
   if (!cleanWa) {

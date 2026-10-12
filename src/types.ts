@@ -67,9 +67,9 @@ export interface AcademicYearConfig {
   angkatan: string; // e.g. "7", "8"
   biayaPendaftaran: string; // e.g. "150.000"
   rekeningPembayaran: string; // e.g. "7702 0102 2580 530 a/n ponpes Subulussalam (Bank BRI)"
-  kontakAdminWa: string; // e.g. "085832297239"
+  kontakAdminWa: string; // e.g. "081225865715"
   kodeTahunId: string; // e.g. "2026"
-  namaSekolah: string; // e.g. "Pondok Pesantren & Madrasah Subulussalam"
+  namaSekolah: string; // e.g. "Pondok Pesantren Islam Subulussalam"
   logoUrl?: string; // URL gambar atau Data URL logo resmi pondok pesantren
   // Fitur Iklan Promo Potongan Biaya Pendaftaran
   promoDiskonAktif?: boolean;
@@ -83,9 +83,9 @@ export const DEFAULT_ACADEMIC_YEAR_CONFIG: AcademicYearConfig = {
   angkatan: '7',
   biayaPendaftaran: '150.000',
   rekeningPembayaran: '7702 0102 2580 530 a/n ponpes Subulussalam (Bank BRI)',
-  kontakAdminWa: '085832297239',
+  kontakAdminWa: '081225865715',
   kodeTahunId: '2026',
-  namaSekolah: 'Pondok Pesantren & Madrasah Subulussalam',
+  namaSekolah: 'Pondok Pesantren Islam Subulussalam',
   logoUrl: '',
   promoDiskonAktif: true,
   persenDiskon: 50,

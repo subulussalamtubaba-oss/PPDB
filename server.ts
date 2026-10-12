@@ -19,9 +19,9 @@ let localSettings = {
     angkatan: "7",
     biayaPendaftaran: "150.000",
     rekeningPembayaran: "7702 0102 2580 530 a/n ponpes Subulussalam (Bank BRI)",
-    kontakAdminWa: "085832297239",
+    kontakAdminWa: "081225865715",
     kodeTahunId: "2026",
-    namaSekolah: "Pondok Pesantren & Madrasah Subulussalam",
+    namaSekolah: "Pondok Pesantren Islam Subulussalam",
   },
   sheetConfig: null as any,
 };
