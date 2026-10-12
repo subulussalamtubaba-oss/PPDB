@@ -348,8 +348,8 @@ export const AcademicYearModal: React.FC<AcademicYearModalProps> = ({
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          if (file.size > 8 * 1024 * 1024) {
-                            alert('Ukuran gambar maksimal 8MB.');
+                          if (file.size > 15 * 1024 * 1024) {
+                            alert('Ukuran gambar maksimal 15MB.');
                             return;
                           }
                           const reader = new FileReader();
@@ -357,13 +357,13 @@ export const AcademicYearModal: React.FC<AcademicYearModalProps> = ({
                             const rawDataUrl = event.target?.result as string;
                             if (!rawDataUrl) return;
 
-                            // Compress and resize image using canvas to max 400x400
+                            // Compress and resize image using canvas to max 320x320 and webp/jpeg to keep it under 100KB
                             const img = new window.Image();
                             img.onload = () => {
                               const canvas = document.createElement('canvas');
                               let width = img.width;
                               let height = img.height;
-                              const maxSize = 400;
+                              const maxSize = 320;
 
                               if (width > height && width > maxSize) {
                                 height = Math.round((height * maxSize) / width);
@@ -378,7 +378,9 @@ export const AcademicYearModal: React.FC<AcademicYearModalProps> = ({
                               const ctx = canvas.getContext('2d');
                               if (ctx) {
                                 ctx.drawImage(img, 0, 0, width, height);
-                                const optimizedUrl = canvas.toDataURL('image/png', 0.9);
+                                // Use jpeg/webp with quality 0.85 for ultra-lightweight dataUrl (usually < 50KB)
+                                const isTransparent = file.type === 'image/png';
+                                const optimizedUrl = canvas.toDataURL(isTransparent ? 'image/png' : 'image/jpeg', 0.85);
                                 setForm((prev) => ({ ...prev, logoUrl: optimizedUrl }));
                               } else {
                                 setForm((prev) => ({ ...prev, logoUrl: rawDataUrl }));
