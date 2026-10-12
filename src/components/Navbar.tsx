@@ -56,16 +56,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-13 sm:h-14">
             <div className="flex items-center space-x-2.5">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-xs overflow-hidden">
-                {academicYearConfig.logoUrl ? (
-                  <img
-                    src={academicYearConfig.logoUrl}
-                    alt={academicYearConfig.namaSekolah}
-                    className="w-full h-full object-contain p-0.5"
-                  />
-                ) : (
-                  <School className="w-4 h-4 sm:w-5 sm:h-5" />
-                )}
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-xs">
+                <School className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
                 <div className="flex items-center space-x-1.5">
@@ -105,18 +97,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Logo & School Title */}
           <div className="flex items-center space-x-3">
             <div
-              className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-900/30 cursor-pointer overflow-hidden"
+              className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-900/30 cursor-pointer"
               onClick={() => onChangeView('dashboard')}
             >
-              {academicYearConfig.logoUrl ? (
-                <img
-                  src={academicYearConfig.logoUrl}
-                  alt={academicYearConfig.namaSekolah}
-                  className="w-full h-full object-contain p-0.5"
-                />
-              ) : (
-                <School className="w-6 h-6" />
-              )}
+              <School className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center space-x-2">

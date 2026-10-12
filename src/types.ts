@@ -70,7 +70,7 @@ export interface AcademicYearConfig {
   kontakAdminWa: string; // e.g. "081225865715"
   kodeTahunId: string; // e.g. "2026"
   namaSekolah: string; // e.g. "Pondok Pesantren Islam Subulussalam"
-  logoUrl?: string; // URL gambar atau Data URL logo resmi pondok pesantren
+  logoUrl?: string; // Optional legacy fallback
   // Fitur Iklan Promo Potongan Biaya Pendaftaran
   promoDiskonAktif?: boolean;
   persenDiskon?: number; // e.g. 50 (50%)
