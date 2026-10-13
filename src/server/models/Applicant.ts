@@ -39,4 +39,6 @@ const ApplicantSchema = new Schema<ApplicantDocument>({
   timestamps: true,
 });
 
-export const Applicant = mongoose.models.Applicant || mongoose.model<ApplicantDocument>('Applicant', ApplicantSchema);
+export const Applicant: mongoose.Model<ApplicantDocument> =
+  (mongoose.models.Applicant as mongoose.Model<ApplicantDocument>) ||
+  mongoose.model<ApplicantDocument>('Applicant', ApplicantSchema);

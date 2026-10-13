@@ -45,7 +45,10 @@ import {
   fetchApplicantsFromSheet,
 } from './services/googleSheets';
 import { exportPendaftarToExcel } from './services/excelExporter';
-import { sendApplicantWhatsAppNotification } from './services/whatsappNotification';
+import {
+  sendApplicantWhatsAppNotification,
+  sendCommitteeWhatsAppNotification,
+} from './services/whatsappNotification';
 
 export default function App() {
   const [applicants, setApplicants] = useState<Pendaftar[]>([]);
@@ -221,7 +224,6 @@ export default function App() {
         if (response.ok) {
           const data = await response.json();
           setApplicants(Array.isArray(data) ? data : []);
-          setDbError(null);
         }
       } catch {
         // Graceful handling without throwing console.error
@@ -744,6 +746,28 @@ export default function App() {
     );
   };
 
+  // Kirim Pesan Konfirmasi langsung ke Nomor WhatsApp Panitia PPDB
+  const handleSendCommitteeNotification = (
+    applicant: Pendaftar,
+    messageText: string
+  ) => {
+    const panitiaWa = academicYearConfig?.kontakAdminWa || '081225865715';
+    const { log } = sendCommitteeWhatsAppNotification(
+      applicant,
+      panitiaWa,
+      messageText,
+      true
+    );
+
+    setNotificationLogs((prev) => [log, ...prev]);
+
+    showToast(
+      'success',
+      'Membuka WhatsApp Panitia...',
+      `Konfirmasi pendaftar ${applicant.namaLengkap} diteruskan ke Panitia (${panitiaWa})`
+    );
+  };
+
   // Export to Excel handler
   const handleExportExcel = (customList?: Pendaftar[]) => {
     const listToExport = customList && customList.length > 0 ? customList : applicants;
@@ -982,6 +1006,7 @@ export default function App() {
                 isFetchingFromSheets={isFetchingFromSheets}
                 onOpenSheetsModal={() => setIsSheetsModalOpen(true)}
                 academicYearConfig={academicYearConfig}
+                onSendCommitteeNotification={handleSendCommitteeNotification}
               />
             </div>
           </>
@@ -1038,6 +1063,7 @@ export default function App() {
           onSyncToSheets={handleSyncSingleToSheets}
           isSheetsConnected={!!accessToken && !!sheetConfig?.spreadsheetId}
           allApplicants={applicants}
+          academicYearConfig={academicYearConfig}
         />
       )}
 

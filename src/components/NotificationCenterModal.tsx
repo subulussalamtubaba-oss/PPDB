@@ -67,14 +67,18 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
                 <div className="flex items-center justify-between text-[11px]">
                   <span
                     className={`font-semibold px-2 py-0.5 rounded-full ${
-                      log.type === 'KONFIRMASI_PENDAFTARAN'
+                      log.type === 'KONFIRMASI_PANITIA'
+                        ? 'bg-teal-100 text-teal-800'
+                        : log.type === 'KONFIRMASI_PENDAFTARAN'
                         ? 'bg-emerald-100 text-emerald-800'
                         : log.type === 'VERIFIKASI_BERHASIL'
                         ? 'bg-blue-100 text-blue-800'
                         : 'bg-amber-100 text-amber-800'
                     }`}
                   >
-                    {log.type === 'KONFIRMASI_PENDAFTARAN'
+                    {log.type === 'KONFIRMASI_PANITIA'
+                      ? '📱 Konfirmasi ke Panitia PPDB'
+                      : log.type === 'KONFIRMASI_PENDAFTARAN'
                       ? '✓ Konfirmasi Pendaftaran (No ID)'
                       : log.type === 'VERIFIKASI_BERHASIL'
                       ? '✓ Lolos Verifikasi Berkas'

@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   Save,
 } from 'lucide-react';
-import { Pendaftar, VerificationStatus } from '../types';
+import { Pendaftar, VerificationStatus, AcademicYearConfig } from '../types';
 import {
   buildRegistrationConfirmationMessage,
   buildVerificationSuccessMessage,
@@ -36,6 +36,7 @@ interface ApplicantDetailModalProps {
   onSyncToSheets: (applicant: Pendaftar) => Promise<void>;
   isSheetsConnected: boolean;
   allApplicants: Pendaftar[];
+  academicYearConfig?: AcademicYearConfig;
 }
 
 export const ApplicantDetailModal: React.FC<ApplicantDetailModalProps> = ({
@@ -45,6 +46,7 @@ export const ApplicantDetailModal: React.FC<ApplicantDetailModalProps> = ({
   onSyncToSheets,
   isSheetsConnected,
   allApplicants,
+  academicYearConfig,
 }) => {
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'NOTIFIKASI_WA' | 'EDIT_DATA' | 'RAW_MESSAGE'>('OVERVIEW');
   const [notifTemplate, setNotifTemplate] = useState<
@@ -101,26 +103,42 @@ export const ApplicantDetailModal: React.FC<ApplicantDetailModalProps> = ({
       | 'PENGINGAT_BIAYA'
       | 'PEMBERITAHUAN_PANITIA'
   ) => {
+    const namaSekolah = academicYearConfig?.namaSekolah || 'Pondok Pesantren Islam Subulussalam';
+    const tahunAjaran = academicYearConfig?.tahunPelajaran || '2026/2027';
+
     setNotifTemplate(tmpl);
     if (tmpl === 'KONFIRMASI_PENDAFTARAN') {
-      setCustomMessage(buildRegistrationConfirmationMessage(applicant));
+      setCustomMessage(buildRegistrationConfirmationMessage(applicant, namaSekolah, tahunAjaran));
     } else if (tmpl === 'BERKAS_DITERIMA') {
-      setCustomMessage(buildBerkasDiterimaMessage(applicant));
+      setCustomMessage(buildBerkasDiterimaMessage(applicant, namaSekolah, tahunAjaran));
     } else if (tmpl === 'KURANG_PERSYARATAN' || tmpl === 'PERBAIKAN_BERKAS') {
-      setCustomMessage(buildKurangPersyaratanMessage(applicant));
+      setCustomMessage(buildKurangPersyaratanMessage(applicant, namaSekolah));
     } else if (tmpl === 'JADWAL_TES') {
-      setCustomMessage(buildJadwalTesMessage(applicant));
+      setCustomMessage(buildJadwalTesMessage(applicant, namaSekolah));
     } else if (tmpl === 'PENGINGAT_BIAYA') {
-      setCustomMessage(buildPengingatPembayaranMessage(applicant));
+      setCustomMessage(
+        buildPengingatPembayaranMessage(
+          applicant,
+          namaSekolah,
+          academicYearConfig?.biayaPendaftaran || '150.000',
+          academicYearConfig?.rekeningPembayaran || '7702 0102 2580 530 a/n ponpes Subulussalam (Bank BRI)'
+        )
+      );
     } else if (tmpl === 'VERIFIKASI_BERHASIL') {
-      setCustomMessage(buildVerificationSuccessMessage(applicant));
+      setCustomMessage(buildVerificationSuccessMessage(applicant, namaSekolah));
     } else {
-      setCustomMessage(buildApplicantNoticeToCommitteeMessage(applicant));
+      setCustomMessage(buildApplicantNoticeToCommitteeMessage(applicant, namaSekolah, tahunAjaran));
     }
   };
 
   const handleSendWhatsApp = () => {
-    const waUrl = getWhatsAppWebLink(applicant.normalizedWa, customMessage);
+    let targetPhone = applicant.normalizedWa;
+    if (notifTemplate === 'PEMBERITAHUAN_PANITIA') {
+      const panitiaRaw = (academicYearConfig?.kontakAdminWa || '081225865715').replace(/\D/g, '');
+      targetPhone = panitiaRaw.startsWith('0') ? '62' + panitiaRaw.substring(1) : panitiaRaw || '6281225865715';
+    }
+
+    const waUrl = getWhatsAppWebLink(targetPhone, customMessage);
     window.open(waUrl, '_blank', 'noopener,noreferrer');
 
     // Update applicant state

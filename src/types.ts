@@ -56,6 +56,7 @@ export interface WhatsAppNotificationLog {
     | 'KURANG_PERSYARATAN'
     | 'JADWAL_TES'
     | 'PENGINGAT_BIAYA'
+    | 'KONFIRMASI_PANITIA'
     | 'CUSTOM';
   timestamp: string;
   messageText: string;

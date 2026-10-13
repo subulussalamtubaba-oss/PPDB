@@ -35,6 +35,10 @@ import {
   buildJadwalTesMessage,
   buildPengingatPembayaranMessage,
   buildRegistrationConfirmationMessage,
+  buildApplicantNoticeToCommitteeMessage,
+  buildPaymentNoticeToCommitteeMessage,
+  buildVerificationNoticeToCommitteeMessage,
+  sendCommitteeWhatsAppNotification,
   getWhatsAppWebLink,
 } from '../services/whatsappNotification';
 
@@ -56,6 +60,7 @@ interface MonitoringTableProps {
       | 'KURANG_PERSYARATAN'
       | 'JADWAL_TES'
       | 'PENGINGAT_BIAYA'
+      | 'KONFIRMASI_PANITIA'
       | 'CUSTOM'
   ) => void;
   isSheetsConnected: boolean;
@@ -65,6 +70,7 @@ interface MonitoringTableProps {
   isFetchingFromSheets?: boolean;
   onOpenSheetsModal?: () => void;
   academicYearConfig?: AcademicYearConfig;
+  onSendCommitteeNotification?: (applicant: Pendaftar, messageText: string) => void;
 }
 
 export const MonitoringTable: React.FC<MonitoringTableProps> = ({
@@ -83,6 +89,7 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
   isFetchingFromSheets = false,
   onOpenSheetsModal,
   academicYearConfig,
+  onSendCommitteeNotification,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -94,6 +101,31 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
   const [selectedQuickTemplate, setSelectedQuickTemplate] = useState<
     'BERKAS_DITERIMA' | 'KURANG_PERSYARATAN' | 'JADWAL_TES' | 'PENGINGAT_BIAYA' | 'KONFIRMASI_PENDAFTARAN'
   >('BERKAS_DITERIMA');
+
+  // State untuk Fitur Cepat Konfirmasi WhatsApp ke Nomor Panitia
+  const [committeeNoticeApplicant, setCommitteeNoticeApplicant] = useState<Pendaftar | null>(null);
+  const [selectedCommitteeTemplate, setSelectedCommitteeTemplate] = useState<
+    'LAPORAN_PENDAFTARAN' | 'KONFIRMASI_PEMBAYARAN' | 'STATUS_VERIFIKASI'
+  >('LAPORAN_PENDAFTARAN');
+  const [committeeCustomNote, setCommitteeCustomNote] = useState('');
+  const [copiedCommitteeText, setCopiedCommitteeText] = useState(false);
+
+  const getCommitteeMessageText = (
+    applicant: Pendaftar,
+    template: 'LAPORAN_PENDAFTARAN' | 'KONFIRMASI_PEMBAYARAN' | 'STATUS_VERIFIKASI',
+    note?: string
+  ) => {
+    const namaSekolah = academicYearConfig?.namaSekolah || 'Pondok Pesantren Islam Subulussalam';
+    const tahunAjaran = academicYearConfig?.tahunPelajaran || '2026/2027';
+
+    if (template === 'KONFIRMASI_PEMBAYARAN') {
+      return buildPaymentNoticeToCommitteeMessage(applicant, namaSekolah, tahunAjaran, note);
+    }
+    if (template === 'STATUS_VERIFIKASI') {
+      return buildVerificationNoticeToCommitteeMessage(applicant, namaSekolah, tahunAjaran, note);
+    }
+    return buildApplicantNoticeToCommitteeMessage(applicant, namaSekolah, tahunAjaran, note);
+  };
 
   // Filter and search
   const filteredApplicants = useMemo(() => {
@@ -526,8 +558,8 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                     className="py-3 px-3 text-right whitespace-nowrap"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="flex items-center justify-end space-x-1">
-                      {/* Tombol Balas Cepat WA (Pilihan Template Otomatis) */}
+                    <div className="flex items-center justify-end space-x-1.5">
+                      {/* Tombol Balas Cepat WA (Pilihan Template Otomatis ke Calon Santri/Wali) */}
                       <button
                         onClick={() => {
                           setQuickReplyApplicant(item);
@@ -541,10 +573,27 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                           setCustomReplyCatatan('');
                         }}
                         className="px-2 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center space-x-1 transition shadow-2xs"
-                        title="Balas Cepat WhatsApp (Pilih template: Berkas Diterima, Kurang Persyaratan, Jadwal Tes, dll)"
+                        title="Balas Cepat WhatsApp ke Wali Santri (Berkas Diterima, Kurang Persyaratan, Jadwal Tes, dll)"
                       >
                         <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
                         <span className="hidden xl:inline text-[11px]">Balas WA</span>
+                      </button>
+
+                      {/* Tombol Cepat Konfirmasi WhatsApp ke Nomor Panitia */}
+                      <button
+                        onClick={() => {
+                          setCommitteeNoticeApplicant(item);
+                          setSelectedCommitteeTemplate(
+                            item.statusPembayaran === 'Sudah' ? 'KONFIRMASI_PEMBAYARAN' : 'LAPORAN_PENDAFTARAN'
+                          );
+                          setCommitteeCustomNote('');
+                          setCopiedCommitteeText(false);
+                        }}
+                        className="px-2 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-semibold text-xs flex items-center space-x-1 transition shadow-2xs"
+                        title={`Kirim Pesan Konfirmasi via WhatsApp ke Nomor Panitia (${academicYearConfig?.kontakAdminWa || '081225865715'})`}
+                      >
+                        <PhoneForwarded className="w-3.5 h-3.5 text-teal-200" />
+                        <span className="hidden xl:inline text-[11px]">WA Panitia</span>
                       </button>
 
                       {/* Detail Modal */}
@@ -719,12 +768,26 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => setQuickReplyApplicant(null)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg transition"
-              >
-                ✕
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCommitteeNoticeApplicant(quickReplyApplicant);
+                    setQuickReplyApplicant(null);
+                  }}
+                  className="text-[11px] bg-emerald-700/80 hover:bg-emerald-700 text-emerald-100 hover:text-white px-2.5 py-1 rounded-lg border border-emerald-500/40 transition hidden sm:flex items-center space-x-1"
+                  title="Alihkan untuk mengirim konfirmasi ke nomor panitia"
+                >
+                  <PhoneForwarded className="w-3 h-3 text-teal-200" />
+                  <span>Ke Panitia</span>
+                </button>
+                <button
+                  onClick={() => setQuickReplyApplicant(null)}
+                  className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Modal Body */}
@@ -987,6 +1050,240 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Buka WhatsApp & Kirim</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL KONFIRMASI WHATSAPP KE NOMOR PANITIA */}
+      {committeeNoticeApplicant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-teal-900 via-teal-800 to-slate-900 text-white px-5 py-4 flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-teal-600/40 border border-teal-400/30 flex items-center justify-center text-teal-300">
+                  <PhoneForwarded className="w-5 h-5 text-teal-300" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center space-x-1.5">
+                    <span>Kirim Konfirmasi ke Nomor Panitia</span>
+                    <span className="text-[10px] bg-teal-500/30 text-teal-200 border border-teal-400/30 px-1.5 py-0.2 rounded font-mono font-medium">
+                      WhatsApp Gateway
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-teal-200">
+                    Tujuan Panitia: <strong>{academicYearConfig?.kontakAdminWa || '081225865715'}</strong> ({academicYearConfig?.namaSekolah || 'Pondok Pesantren Islam Subulussalam'})
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuickReplyApplicant(committeeNoticeApplicant);
+                    setCommitteeNoticeApplicant(null);
+                  }}
+                  className="text-[11px] bg-teal-800/80 hover:bg-teal-700 text-teal-100 hover:text-white px-2.5 py-1 rounded-lg border border-teal-500/40 transition hidden sm:flex items-center space-x-1"
+                  title="Alihkan untuk mengirim ke wali santri"
+                >
+                  <Zap className="w-3 h-3 text-amber-300" />
+                  <span>Ke Wali Santri</span>
+                </button>
+                <button
+                  onClick={() => setCommitteeNoticeApplicant(null)}
+                  className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs">
+              {/* Info Target Santri */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Calon Santri Yang Dikonfirmasi</span>
+                  <p className="font-bold text-slate-900 text-sm">{committeeNoticeApplicant.namaLengkap}</p>
+                  <p className="text-slate-500 text-[11px]">Wali: {committeeNoticeApplicant.namaWali} ({committeeNoticeApplicant.noWa}) • Asal: {committeeNoticeApplicant.asalSekolah}</p>
+                </div>
+                <div className="text-right">
+                  <span className="font-mono text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 font-bold text-xs block">
+                    {committeeNoticeApplicant.id}
+                  </span>
+                  <span className={`text-[10px] font-bold mt-1 px-1.5 py-0.2 rounded inline-block ${
+                    committeeNoticeApplicant.statusPembayaran === 'Sudah' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    Biaya: {committeeNoticeApplicant.statusPembayaran.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Template Buttons Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-2">
+                  Pilih Format Pesan Konfirmasi ke Panitia:
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {/* 1. Laporan Pendaftaran Baru */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCommitteeTemplate('LAPORAN_PENDAFTARAN')}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                      selectedCommitteeTemplate === 'LAPORAN_PENDAFTARAN'
+                        ? 'bg-teal-50 border-teal-600 ring-2 ring-teal-600/20 text-teal-950 shadow-2xs'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-1.5 mb-1.5">
+                      <FileText className="w-4 h-4 text-teal-600 shrink-0" />
+                      <span className="font-bold text-xs">1. Data Santri Baru</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Laporan lengkap pendaftar masuk untuk arsip & verifikasi panitia.
+                    </p>
+                  </button>
+
+                  {/* 2. Konfirmasi Pembayaran */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCommitteeTemplate('KONFIRMASI_PEMBAYARAN')}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                      selectedCommitteeTemplate === 'KONFIRMASI_PEMBAYARAN'
+                        ? 'bg-emerald-50 border-emerald-600 ring-2 ring-emerald-600/20 text-emerald-950 shadow-2xs'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-1.5 mb-1.5">
+                      <CreditCard className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="font-bold text-xs">2. Kas / Pembayaran</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Rincian transfer biaya masuk untuk dicocokkan panitia bendahara.
+                    </p>
+                  </button>
+
+                  {/* 3. Status Verifikasi Berkas */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCommitteeTemplate('STATUS_VERIFIKASI')}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                      selectedCommitteeTemplate === 'STATUS_VERIFIKASI'
+                        ? 'bg-blue-50 border-blue-600 ring-2 ring-blue-600/20 text-blue-950 shadow-2xs'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-1.5 mb-1.5">
+                      <CheckCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span className="font-bold text-xs">3. Status Berkas</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Laporan kelulusan verifikasi berkas santri kepada tim seleksi.
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Input Catatan Tambahan Admin (Opsional) */}
+              <div className="p-3 bg-teal-50/70 border border-teal-200 rounded-xl space-y-1.5">
+                <label className="block text-[11px] font-bold text-teal-950">
+                  Catatan Tambahan untuk Panitia (Opsional):
+                </label>
+                <input
+                  type="text"
+                  value={committeeCustomNote}
+                  onChange={(e) => setCommitteeCustomNote(e.target.value)}
+                  placeholder="Contoh: Wali santri sudah konfirmasi transfer via BRI jam 09.30 WIB"
+                  className="w-full px-3 py-1.5 text-xs rounded-lg border border-teal-300 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-800"
+                />
+                <p className="text-[10px] text-teal-700">
+                  Catatan ini akan otomatis disisipkan di dalam teks pesan yang dikirim ke nomor panitia.
+                </p>
+              </div>
+
+              {/* Pratinjau Teks WhatsApp ke Panitia */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-slate-700">Pratinjau Pesan Konfirmasi ke Panitia:</span>
+                  <span className="text-teal-700 font-medium">
+                    Tujuan: <strong>{academicYearConfig?.kontakAdminWa || '081225865715'}</strong>
+                  </span>
+                </div>
+                <div className="p-3 bg-slate-900 text-slate-100 font-mono text-[11px] rounded-xl whitespace-pre-wrap max-h-44 overflow-y-auto leading-relaxed border border-slate-800 select-all">
+                  {getCommitteeMessageText(
+                    committeeNoticeApplicant,
+                    selectedCommitteeTemplate,
+                    committeeCustomNote
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setCommitteeNoticeApplicant(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition"
+              >
+                Batal
+              </button>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const msg = getCommitteeMessageText(
+                      committeeNoticeApplicant,
+                      selectedCommitteeTemplate,
+                      committeeCustomNote
+                    );
+                    navigator.clipboard.writeText(msg);
+                    setCopiedCommitteeText(true);
+                    setTimeout(() => setCopiedCommitteeText(false), 2500);
+                  }}
+                  className="px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center space-x-1"
+                >
+                  {copiedCommitteeText ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700 font-bold">Tersalin!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Salin Teks</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const msg = getCommitteeMessageText(
+                      committeeNoticeApplicant,
+                      selectedCommitteeTemplate,
+                      committeeCustomNote
+                    );
+
+                    if (onSendCommitteeNotification) {
+                      onSendCommitteeNotification(committeeNoticeApplicant, msg);
+                    } else {
+                      const panitiaWa = academicYearConfig?.kontakAdminWa || '081225865715';
+                      sendCommitteeWhatsAppNotification(committeeNoticeApplicant, panitiaWa, msg, true);
+                    }
+                    setCommitteeNoticeApplicant(null);
+                  }}
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white shadow-sm transition flex items-center space-x-1.5"
+                >
+                  <PhoneForwarded className="w-3.5 h-3.5 text-teal-200" />
+                  <span>Kirim ke WA Panitia</span>
                 </button>
               </div>
             </div>

@@ -7,7 +7,8 @@ import { Pendaftar, WhatsAppNotificationLog } from '../types';
 export const buildApplicantNoticeToCommitteeMessage = (
   applicant: Pendaftar,
   namaSekolah: string = 'Pondok Pesantren & Madrasah Subulussalam',
-  tahunAjaran: string = '2026/2027'
+  tahunAjaran: string = '2026/2027',
+  catatanAdmin?: string
 ): string => {
   return `*PEMBERITAHUAN PENDAFTARAN SANTRI BARU*
 *${namaSekolah.toUpperCase()}*
@@ -40,7 +41,7 @@ Berikut rincian data pendaftaran ananda:
     applicant.statusPembayaran.toUpperCase() === 'SUDAH' && applicant.nominalTransfer
       ? `\n  - Nominal: Rp ${applicant.nominalTransfer}\n  - Saluran/Bank: ${applicant.metodeTransfer || '-'}\n  - Pengirim: ${applicant.namaPengirimTransfer || '-'}\n  - Waktu: ${applicant.waktuTransfer || '-'}`
       : ''
-  }
+  }${catatanAdmin ? `\n\n📌 *CATATAN KHUSUS DARI ADMIN:*\n${catatanAdmin}` : ''}
 
 Mohon perkenan Bapak/Ibu Panitia PPDB untuk memeriksa dan memverifikasi data di atas. Apabila terdapat berkas atau persyaratan lanjutan yang perlu kami lengkapi, mohon dapat mengabari kami melalui nomor WhatsApp ini.
 
@@ -51,6 +52,82 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
 _Hormat kami,_
 *${applicant.namaWali}*
 (Wali dari calon santri: *${applicant.namaLengkap}*)`;
+};
+
+/**
+ * Template for Payment Confirmation Notice TO the Committee
+ */
+export const buildPaymentNoticeToCommitteeMessage = (
+  applicant: Pendaftar,
+  namaSekolah: string = 'Pondok Pesantren & Madrasah Subulussalam',
+  tahunAjaran: string = '2026/2027',
+  catatanAdmin?: string
+): string => {
+  return `*KONFIRMASI PEMBAYARAN PENDAFTARAN KE PANITIA*
+*${namaSekolah.toUpperCase()}*
+Tahun Pelajaran ${tahunAjaran}
+
+Assalamu'alaikum Warahmatullahi Wabarakatuh,
+
+Yth. *Bapak/Ibu Panitia / Bendahara PPDB*,
+
+Berikut konfirmasi administrasi pembayaran santri baru yang tercatat pada sistem:
+
+💳 *DATA PEMBAYARAN & SANTRI:*
+• *ID Pendaftaran:* \`${applicant.id}\`
+• *Nama Santri:* ${applicant.namaLengkap}
+• *Asal Sekolah:* ${applicant.asalSekolah}
+• *Nama Orang Tua / Wali:* ${applicant.namaWali}
+• *No. WhatsApp Wali:* ${applicant.noWa}
+• *Status Biaya:* *${applicant.statusPembayaran.toUpperCase()}*${
+    applicant.statusPembayaran.toUpperCase() === 'SUDAH'
+      ? `\n• *Nominal Transfer:* Rp ${applicant.nominalTransfer || '-'}\n• *Bank / Saluran:* ${applicant.metodeTransfer || '-'}\n• *Nama Pemilik Rekening Pengirim:* ${applicant.namaPengirimTransfer || '-'}\n• *Waktu Transfer:* ${applicant.waktuTransfer || '-'}`
+      : '\n• *Keterangan:* Menunggu pembayaran biaya pendaftaran dari calon wali santri.'
+  }${catatanAdmin ? `\n\n📌 *CATATAN KHUSUS DARI ADMIN:*\n${catatanAdmin}` : ''}
+
+Mohon Bapak/Ibu Panitia Keuangan melakukan pengecekan pada mutasi rekening bank pondok dan mengonfirmasi bukti bayar santri.
+
+Jazakumullahu khairan katsiran.
+Wassalamu'alaikum Warahmatullahi Wabarakatuh.`;
+};
+
+/**
+ * Template for Document Verification Status Notice TO the Committee
+ */
+export const buildVerificationNoticeToCommitteeMessage = (
+  applicant: Pendaftar,
+  namaSekolah: string = 'Pondok Pesantren & Madrasah Subulussalam',
+  tahunAjaran: string = '2026/2027',
+  catatanAdmin?: string
+): string => {
+  const issues = (applicant.catatanVerifikasi || []).map((c, i) => `  ${i + 1}. ${c}`).join('\n');
+  return `*LAPORAN STATUS VERIFIKASI BERKAS KE PANITIA*
+*${namaSekolah.toUpperCase()}*
+Tahun Pelajaran ${tahunAjaran}
+
+Assalamu'alaikum Warahmatullahi Wabarakatuh,
+
+Yth. *Bapak/Ibu Panitia PPDB*,
+
+Berikut laporan pembaruan status verifikasi berkas calon santri baru:
+
+📑 *RINCIAN VERIFIKASI SANTRI:*
+• *ID Pendaftaran:* \`${applicant.id}\`
+• *Nama Lengkap:* ${applicant.namaLengkap}
+• *NISN:* ${applicant.nisn || 'Belum Ada'}
+• *Asal Sekolah:* ${applicant.asalSekolah}
+• *Wali Santri:* ${applicant.namaWali} (${applicant.noWa})
+• *Status Verifikasi:* *${applicant.statusVerifikasi}*
+${
+  applicant.statusVerifikasi === 'TERVERIFIKASI'
+    ? '• *Keterangan:* Seluruh berkas telah lengkap, valid, dan disetujui tim pemeriksa. ✅'
+    : applicant.statusVerifikasi === 'PERLU PERBAIKAN'
+    ? `• *Catatan Kekurangan Persyaratan:*\n${issues || '  - Berkas belum lengkap / menunggu revisi dari wali santri.'}`
+    : '• *Keterangan:* Berkas masih dalam antrean peninjauan administrasi. ⏳'
+}${catatanAdmin ? `\n\n📌 *CATATAN TAMBAHAN DARI ADMIN:*\n${catatanAdmin}` : ''}
+
+Laporan ini dikirimkan otomatis melalui Meja Admin PPDB.
+Wassalamu'alaikum Warahmatullahi Wabarakatuh.`;
 };
 
 /**
@@ -367,6 +444,38 @@ export const sendApplicantWhatsAppNotification = (
     namaLengkap: applicant.namaLengkap,
     noWa: applicant.noWa,
     type,
+    timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+    messageText,
+    status: 'TERKIRIM',
+  };
+
+  return { log, waUrl };
+};
+
+/**
+ * Dispatches notification specifically targeted TO the PPDB Committee
+ */
+export const sendCommitteeWhatsAppNotification = (
+  applicant: Pendaftar,
+  panitiaWa: string = '081225865715',
+  messageText: string,
+  autoOpenWindow: boolean = true
+): { log: WhatsAppNotificationLog; waUrl: string } => {
+  const digitsOnly = panitiaWa.replace(/\D/g, '');
+  const cleanPanitiaWa = digitsOnly.startsWith('0') ? '62' + digitsOnly.substring(1) : digitsOnly;
+  const targetPhone = cleanPanitiaWa || '6281225865715';
+  const waUrl = getWhatsAppWebLink(targetPhone, messageText);
+
+  if (autoOpenWindow) {
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  const log: WhatsAppNotificationLog = {
+    id: 'NOTIF-PANITIA-' + Date.now().toString().slice(-6),
+    pendaftarId: applicant.id,
+    namaLengkap: `[KE PANITIA] ${applicant.namaLengkap}`,
+    noWa: panitiaWa,
+    type: 'KONFIRMASI_PANITIA',
     timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
     messageText,
     status: 'TERKIRIM',
