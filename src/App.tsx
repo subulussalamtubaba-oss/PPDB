@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Lock,
   ShieldCheck,
+  Calendar,
 } from 'lucide-react';
 import {
   Pendaftar,
@@ -781,7 +782,7 @@ export default function App() {
 
   return (
     <div
-      className={`bg-slate-100/70 text-slate-900 font-sans flex flex-col ${
+      className={`bg-slate-100/70 text-slate-900 font-sans flex flex-col no-scrollbar ${
         currentView === 'chatbot' ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'
       }`}
     >
@@ -842,30 +843,30 @@ export default function App() {
         className={`flex-1 w-full flex flex-col min-h-0 ${
           currentView === 'chatbot'
             ? 'p-0 overflow-hidden'
-            : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'
+            : 'max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-6 space-y-3.5 sm:space-y-6 pb-24 md:pb-6'
         }`}
       >
         {!isAdminAuthenticated || currentView === 'chatbot' ? (
           <div className="flex-1 w-full flex flex-col min-h-0 overflow-hidden">
             {/* If admin is currently previewing the public portal */}
             {isAdminAuthenticated && (
-              <div className="bg-emerald-950 text-white px-4 py-2.5 flex items-center justify-between text-xs z-30 shrink-0 border-b border-emerald-800">
-                <span className="flex items-center space-x-2">
+              <div className="bg-emerald-950 text-white px-3 sm:px-4 py-2.5 flex items-center justify-between text-xs z-30 shrink-0 border-b border-emerald-800">
+                <span className="flex items-center space-x-2 min-w-0">
                   <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span className="truncate">
-                    Anda sedang melihat <strong>Portal Layanan Wali Murid</strong>. Wali murid umum tidak melihat meja admin.
+                    Anda sedang melihat <strong>Portal Layanan Wali Murid</strong>.
                   </span>
                 </span>
                 <div className="flex items-center space-x-2 shrink-0 ml-2">
                   <button
                     onClick={() => setCurrentView('dashboard')}
-                    className="bg-white text-emerald-950 font-bold px-3 py-1.5 rounded-xl hover:bg-emerald-50 transition text-xs shadow-2xs"
+                    className="bg-white text-emerald-950 font-bold px-3 py-1.5 rounded-xl hover:bg-emerald-50 active:bg-emerald-100 transition text-xs shadow-2xs min-h-[36px]"
                   >
-                    Buka Meja Kerja Admin 📋
+                    Buka Meja Admin 📋
                   </button>
                   <button
                     onClick={handleLockAdmin}
-                    className="bg-emerald-800 text-emerald-200 hover:text-white px-2.5 py-1.5 rounded-xl transition text-xs flex items-center space-x-1"
+                    className="bg-emerald-800 text-emerald-200 hover:text-white px-2.5 py-1.5 rounded-xl transition text-xs flex items-center space-x-1 min-h-[36px]"
                     title="Kunci sesi admin"
                   >
                     <Lock className="w-3 h-3" />
@@ -895,50 +896,50 @@ export default function App() {
         ) : (
           <>
             {/* Admin Desk Header Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200/90 shadow-2xs">
-              <div className="flex items-center space-x-2 w-full sm:w-auto">
-                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
+              <div className="flex items-center space-x-2.5 min-w-0 w-full sm:w-auto">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold shrink-0">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
-                <div>
-                  <h1 className="text-sm font-bold text-slate-900">
+                <div className="min-w-0">
+                  <h1 className="text-xs sm:text-sm font-bold text-slate-900 truncate">
                     Ruang Kerja Panitia PPDB Subulussalam
                   </h1>
-                  <p className="text-[11px] text-slate-500">
-                    Tahun Pelajaran {academicYearConfig.tahunPelajaran} • Angkatan {academicYearConfig.angkatan} • Data Terlindungi & Rahasia
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate">
+                    TP {academicYearConfig.tahunPelajaran} • Angkatan {academicYearConfig.angkatan} • Panel Resmi
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
+              <div className="flex items-center space-x-1.5 sm:space-x-2 w-full sm:w-auto justify-end overflow-x-auto no-scrollbar py-0.5">
                 <button
                   onClick={() => setIsAcademicYearModalOpen(true)}
-                  className="px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-xs font-semibold text-amber-900 transition flex items-center space-x-1.5"
+                  className="px-2.5 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 active:bg-amber-200 text-xs font-semibold text-amber-900 transition flex items-center space-x-1 whitespace-nowrap min-h-[36px]"
                   title="Atur Tahun Pelajaran, Biaya Pendaftaran & Info Rekening"
                 >
                   <span>📅 TP {academicYearConfig.tahunPelajaran}</span>
                 </button>
                 <button
                   onClick={() => setCurrentView('chatbot')}
-                  className="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition flex items-center space-x-1.5"
+                  className="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 active:bg-slate-100 text-xs font-semibold text-slate-700 transition flex items-center space-x-1 whitespace-nowrap min-h-[36px]"
                   title="Lihat tampilan percakapan yang diakses oleh wali murid"
                 >
-                  <span>💬 Tinjau Portal Wali</span>
+                  <span>💬 Portal Wali</span>
                 </button>
                 <button
                   onClick={handleLockAdmin}
-                  className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 hover:bg-rose-100 text-xs font-bold text-rose-800 transition flex items-center space-x-1"
+                  className="px-2.5 py-1.5 rounded-xl bg-rose-50 border border-rose-200 hover:bg-rose-100 active:bg-rose-200 text-xs font-bold text-rose-800 transition flex items-center space-x-1 whitespace-nowrap min-h-[36px]"
                   title="Kunci meja admin agar tidak terbuka saat ditinggalkan"
                 >
                   <Lock className="w-3.5 h-3.5" />
-                  <span>Kunci Meja Admin</span>
+                  <span>Kunci</span>
                 </button>
               </div>
             </div>
 
             {/* Banner Alert if Google Sheets Not Connected */}
             {!sheetConfig?.spreadsheetId && (
-              <div className="bg-emerald-900 text-white rounded-xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="bg-emerald-900 text-white rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-lg bg-emerald-700 flex items-center justify-center text-white shrink-0">
                     <FileSpreadsheet className="w-5 h-5" />
@@ -1044,6 +1045,70 @@ export default function App() {
             </div>
           </div>
         </footer>
+      )}
+
+      {/* Mobile Sticky Bottom Thumb Action Bar for Admin Desk */}
+      {isAdminAuthenticated && currentView === 'dashboard' && (
+        <nav
+          aria-label="Navigasi Cepat Meja Admin"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-2 py-1.5 flex items-center justify-around shadow-lg shadow-slate-900/10"
+        >
+          <button
+            onClick={() => setCurrentView('chatbot')}
+            className="flex flex-col items-center justify-center text-slate-600 hover:text-emerald-700 active:text-emerald-800 min-h-[44px] min-w-[50px] px-1.5 py-1 transition active:scale-[0.95]"
+          >
+            <School className="w-5 h-5 text-emerald-600 mb-0.5" />
+            <span className="text-[10px] font-semibold tracking-tight">Portal Wali</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (sheetConfig?.spreadsheetId && handleFetchFromSheets) {
+                handleFetchFromSheets();
+              } else {
+                setIsSheetsModalOpen(true);
+              }
+            }}
+            disabled={isFetchingFromSheets}
+            className="flex flex-col items-center justify-center text-slate-600 hover:text-emerald-700 active:text-emerald-800 min-h-[44px] min-w-[50px] px-1.5 py-1 transition disabled:opacity-50 active:scale-[0.95]"
+          >
+            <FileSpreadsheet className={`w-5 h-5 text-emerald-600 mb-0.5 ${isFetchingFromSheets ? 'animate-spin' : ''}`} />
+            <span className="text-[10px] font-semibold tracking-tight">
+              {sheetConfig?.spreadsheetId ? 'Tarik Sheets' : 'Sambung'}
+            </span>
+          </button>
+
+          <button
+            onClick={() => handleExportExcel()}
+            className="flex flex-col items-center justify-center text-slate-600 hover:text-emerald-700 active:text-emerald-800 min-h-[44px] min-w-[50px] px-1.5 py-1 transition active:scale-[0.95]"
+          >
+            <Download className="w-5 h-5 text-blue-600 mb-0.5" />
+            <span className="text-[10px] font-semibold tracking-tight">Excel</span>
+          </button>
+
+          <button
+            onClick={() => setIsAcademicYearModalOpen(true)}
+            className="flex flex-col items-center justify-center text-slate-600 hover:text-emerald-700 active:text-emerald-800 min-h-[44px] min-w-[50px] px-1.5 py-1 transition active:scale-[0.95]"
+          >
+            <Calendar className="w-5 h-5 text-amber-500 mb-0.5" />
+            <span className="text-[10px] font-semibold tracking-tight">Atur TP</span>
+          </button>
+
+          <button
+            onClick={() => setIsNotifModalOpen(true)}
+            className="flex flex-col items-center justify-center text-slate-600 hover:text-emerald-700 active:text-emerald-800 min-h-[44px] min-w-[50px] px-1.5 py-1 transition relative active:scale-[0.95]"
+          >
+            <div className="relative">
+              <Bell className="w-5 h-5 text-purple-600 mb-0.5" />
+              {notificationLogs.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center">
+                  {notificationLogs.length > 9 ? '9+' : notificationLogs.length}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] font-semibold tracking-tight">Log WA</span>
+          </button>
+        </nav>
       )}
 
       {/* Modals */}

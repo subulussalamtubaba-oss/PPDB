@@ -6,6 +6,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+mongoose.set("bufferCommands", false);
+
 const app = express();
 app.use(express.json());
 

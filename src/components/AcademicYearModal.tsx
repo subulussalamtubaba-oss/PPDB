@@ -413,21 +413,21 @@ export const AcademicYearModal: React.FC<AcademicYearModalProps> = ({
         </form>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+        <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
           <button
             type="button"
             onClick={handleResetDefault}
-            className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center space-x-1 transition"
+            className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center space-x-1 transition min-h-[36px]"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Bawaan</span>
           </button>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition min-h-[38px]"
             >
               Batal
             </button>
@@ -435,7 +435,7 @@ export const AcademicYearModal: React.FC<AcademicYearModalProps> = ({
               type="button"
               disabled={isSaving}
               onClick={handleSave}
-              className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition flex items-center space-x-1.5 ${
+              className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition flex items-center space-x-1.5 min-h-[38px] active:scale-[0.98] ${
                 isSaving ? 'bg-emerald-700 opacity-80 cursor-wait' : 'bg-emerald-600 hover:bg-emerald-700'
               }`}
             >

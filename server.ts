@@ -4,15 +4,19 @@ import { createServer as createViteServer } from "vite";
 import mongoose from "mongoose";
 import { Applicant } from "./src/server/models/Applicant";
 import { AppSettings } from "./src/server/models/Settings";
+import { INITIAL_MOCK_APPLICANTS } from "./src/data/mockApplicants";
 import dotenv from "dotenv";
 
 dotenv.config();
+
+// Fail-fast on MongoDB commands to avoid hanging if DB is unreachable
+mongoose.set("bufferCommands", false);
 
 let isConnected = false;
 let isConnecting = false;
 
 // Fallback in-memory storage for preview/development when MONGODB_URI is not set
-let localApplicants: any[] = [];
+let localApplicants: any[] = [...INITIAL_MOCK_APPLICANTS];
 let localSettings = {
   academicYearConfig: {
     tahunPelajaran: "2026/2027",
@@ -218,6 +222,22 @@ async function startServer() {
     } catch (err: any) {
       return res.status(500).json({ error: err.message });
     }
+  });
+
+  // Database offline error middleware fallback
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (
+      err.name === "MongooseError" ||
+      err.name === "MongoNetworkError" ||
+      (typeof err.message === "string" && err.message.includes("buffering timed out"))
+    ) {
+      console.warn("[AI Studio] Database offline — returning mock response");
+      if (req.method === "GET") {
+        return res.json(req.path.endsWith("s") || req.path.endsWith("s/") ? [] : {});
+      }
+      return res.status(503).json({ error: "Service temporarily unavailable (database offline)" });
+    }
+    next(err);
   });
 
   // Vite middleware for development

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Users, CheckCircle2, Clock, AlertTriangle, CreditCard, Award, MapPin } from 'lucide-react';
+import React, { useState } from 'react';
+import { Users, CheckCircle2, Clock, AlertTriangle, CreditCard, Award, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 import { Pendaftar } from '../types';
 
 interface DashboardStatsProps {
@@ -155,42 +155,44 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
+  const [isChartsExpandedMobile, setIsChartsExpandedMobile] = React.useState(false);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* 6 Grid Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 lg:gap-4">
         {/* Total Pendaftar */}
         <button
           onClick={() => onSelectFilter('ALL')}
-          className={`text-left p-4 rounded-xl border transition relative overflow-hidden ${
+          className={`text-left p-3 sm:p-4 rounded-xl border transition relative overflow-hidden active:scale-[0.98] ${
             activeFilter === 'ALL'
               ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-emerald-500/50'
-              : 'bg-white text-slate-800 border-slate-200 hover:border-slate-300 hover:shadow-sm'
+              : 'bg-white text-slate-800 border-slate-200 hover:border-slate-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Masuk</span>
-            <Users className={`w-4 h-4 ${activeFilter === 'ALL' ? 'text-emerald-400' : 'text-slate-400'}`} />
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Total Masuk</span>
+            <Users className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${activeFilter === 'ALL' ? 'text-emerald-400' : 'text-slate-400'}`} />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold tracking-tight">{total}</div>
-          <div className="text-[11px] mt-1 text-slate-400">Pesan ter-ekstrak</div>
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">{total}</div>
+          <div className="text-[10px] sm:text-[11px] mt-0.5 sm:mt-1 text-slate-400 truncate">Pesan ter-ekstrak</div>
         </button>
 
         {/* Terverifikasi */}
         <button
           onClick={() => onSelectFilter('TERVERIFIKASI')}
-          className={`text-left p-4 rounded-xl border transition relative overflow-hidden ${
+          className={`text-left p-3 sm:p-4 rounded-xl border transition relative overflow-hidden active:scale-[0.98] ${
             activeFilter === 'TERVERIFIKASI'
               ? 'bg-emerald-950 text-white border-emerald-800 shadow-md ring-2 ring-emerald-500'
-              : 'bg-white text-slate-800 border-slate-200 hover:border-emerald-300 hover:shadow-sm'
+              : 'bg-white text-slate-800 border-slate-200 hover:border-emerald-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600">Terverifikasi</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-emerald-600 truncate">Terverifikasi</span>
+            <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 shrink-0" />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold text-emerald-600 tracking-tight">{verified}</div>
-          <div className="text-[11px] mt-1 text-emerald-700 font-medium">
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-emerald-600 tracking-tight">{verified}</div>
+          <div className="text-[10px] sm:text-[11px] mt-0.5 sm:mt-1 text-emerald-700 font-medium truncate">
             {verifiedPercent}% Lolos berkas
           </div>
         </button>
@@ -198,76 +200,93 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
         {/* Menunggu Verifikasi */}
         <button
           onClick={() => onSelectFilter('MENUNGGU VERIFIKASI')}
-          className={`text-left p-4 rounded-xl border transition relative overflow-hidden ${
+          className={`text-left p-3 sm:p-4 rounded-xl border transition relative overflow-hidden active:scale-[0.98] ${
             activeFilter === 'MENUNGGU VERIFIKASI'
               ? 'bg-amber-950 text-white border-amber-800 shadow-md ring-2 ring-amber-500'
-              : 'bg-white text-slate-800 border-slate-200 hover:border-amber-300 hover:shadow-sm'
+              : 'bg-white text-slate-800 border-slate-200 hover:border-amber-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-600">Menunggu</span>
-            <Clock className="w-4 h-4 text-amber-500" />
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-amber-600 truncate">Menunggu</span>
+            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold text-amber-600 tracking-tight">{pending}</div>
-          <div className="text-[11px] mt-1 text-amber-700 font-medium">Perlu review panitia</div>
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-600 tracking-tight">{pending}</div>
+          <div className="text-[10px] sm:text-[11px] mt-0.5 sm:mt-1 text-amber-700 font-medium truncate">Perlu review panitia</div>
         </button>
 
         {/* Perlu Perbaikan */}
         <button
           onClick={() => onSelectFilter('PERLU PERBAIKAN')}
-          className={`text-left p-4 rounded-xl border transition relative overflow-hidden ${
+          className={`text-left p-3 sm:p-4 rounded-xl border transition relative overflow-hidden active:scale-[0.98] ${
             activeFilter === 'PERLU PERBAIKAN'
               ? 'bg-rose-950 text-white border-rose-800 shadow-md ring-2 ring-rose-500'
-              : 'bg-white text-slate-800 border-slate-200 hover:border-rose-300 hover:shadow-sm'
+              : 'bg-white text-slate-800 border-slate-200 hover:border-rose-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-rose-600">Perlu Perbaikan</span>
-            <AlertTriangle className="w-4 h-4 text-rose-500" />
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-rose-600 truncate">Perlu Perbaikan</span>
+            <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 shrink-0" />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold text-rose-600 tracking-tight">{needsFix}</div>
-          <div className="text-[11px] mt-1 text-rose-700 font-medium">Data NISN/WA bermasalah</div>
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-rose-600 tracking-tight">{needsFix}</div>
+          <div className="text-[10px] sm:text-[11px] mt-0.5 sm:mt-1 text-rose-700 font-medium truncate">Data bermasalah</div>
         </button>
 
         {/* Sudah Bayar */}
         <button
           onClick={() => onSelectFilter('BAYAR_SUDAH')}
-          className={`text-left p-4 rounded-xl border transition relative overflow-hidden ${
+          className={`text-left p-3 sm:p-4 rounded-xl border transition relative overflow-hidden active:scale-[0.98] ${
             activeFilter === 'BAYAR_SUDAH'
               ? 'bg-blue-950 text-white border-blue-800 shadow-md ring-2 ring-blue-500'
-              : 'bg-white text-slate-800 border-slate-200 hover:border-blue-300 hover:shadow-sm'
+              : 'bg-white text-slate-800 border-slate-200 hover:border-blue-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-blue-600">Biaya Lunas</span>
-            <CreditCard className="w-4 h-4 text-blue-500" />
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-blue-600 truncate">Biaya Lunas</span>
+            <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 shrink-0" />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold text-blue-600 tracking-tight">{paid}</div>
-          <div className="text-[11px] mt-1 text-blue-700 font-medium">
-            {paidPercent}% Terkonfirmasi
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-600 tracking-tight">{paid}</div>
+          <div className="text-[10px] sm:text-[11px] mt-0.5 sm:mt-1 text-blue-700 font-medium truncate">
+            {paidPercent}% Lunas
           </div>
         </button>
 
         {/* Penerima PIP */}
         <button
           onClick={() => onSelectFilter('PIP_YA')}
-          className={`text-left p-4 rounded-xl border transition relative overflow-hidden ${
+          className={`text-left p-3 sm:p-4 rounded-xl border transition relative overflow-hidden active:scale-[0.98] ${
             activeFilter === 'PIP_YA'
               ? 'bg-purple-950 text-white border-purple-800 shadow-md ring-2 ring-purple-500'
-              : 'bg-white text-slate-800 border-slate-200 hover:border-purple-300 hover:shadow-sm'
+              : 'bg-white text-slate-800 border-slate-200 hover:border-purple-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-purple-600">Penerima PIP</span>
-            <Award className="w-4 h-4 text-purple-500" />
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-purple-600 truncate">Penerima PIP</span>
+            <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-500 shrink-0" />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold text-purple-600 tracking-tight">{pip}</div>
-          <div className="text-[11px] mt-1 text-purple-700 font-medium">Jalur afirmasi</div>
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-600 tracking-tight">{pip}</div>
+          <div className="text-[10px] sm:text-[11px] mt-0.5 sm:mt-1 text-purple-700 font-medium truncate">Jalur afirmasi</div>
+        </button>
+      </div>
+
+      {/* Mobile Toggle Button for Regional Distribution Charts */}
+      <div className="md:hidden">
+        <button
+          onClick={() => setIsChartsExpandedMobile(!isChartsExpandedMobile)}
+          className="w-full flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition min-h-[44px]"
+        >
+          <div className="flex items-center space-x-2">
+            <MapPin className="w-4 h-4 text-emerald-600" />
+            <span>Statistik Asal Daerah & Rasio Berkas</span>
+          </div>
+          <div className="flex items-center space-x-1 text-slate-400">
+            <span className="text-[11px] font-normal">{isChartsExpandedMobile ? 'Tutup' : 'Lihat'}</span>
+            {isChartsExpandedMobile ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </div>
         </button>
       </div>
 
       {/* Origin Region/Kecamatan Breakdown & Payment Status Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className={`${isChartsExpandedMobile ? 'grid' : 'hidden md:grid'} grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4`}>
         {/* Origin Districts Bar */}
         <div className="md:col-span-2 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between mb-3">

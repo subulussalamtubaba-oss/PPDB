@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+/* Hide scrollbars across all browsers (Chrome, Safari, Edge, Firefox) while preserving smooth scrolling */
+html,
+body,
+#root {
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+}
+
+/* Global suppression of visible scrollbar bars for clean mobile and desktop aesthetic */
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+}
+
+* {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
 /* Utility classes to hide scrollbar across browsers */
 .no-scrollbar::-webkit-scrollbar {
   display: none !important;
@@ -7,7 +35,6 @@
   height: 0px !important;
 }
 .no-scrollbar {
-  -ms-overflow-style: none !important; /* IE and Edge */
-  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
-

@@ -26,6 +26,10 @@ import {
   Zap,
   PhoneForwarded,
   CheckCheck,
+  LayoutGrid,
+  Table as TableIcon,
+  MapPin,
+  GraduationCap,
 } from 'lucide-react';
 import { Pendaftar, VerificationStatus, AcademicYearConfig } from '../types';
 import {
@@ -101,6 +105,9 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
   const [selectedQuickTemplate, setSelectedQuickTemplate] = useState<
     'BERKAS_DITERIMA' | 'KURANG_PERSYARATAN' | 'JADWAL_TES' | 'PENGINGAT_BIAYA' | 'KONFIRMASI_PENDAFTARAN'
   >('BERKAS_DITERIMA');
+
+  // Dual view mode: 'cards' is mobile-first touch friendly, 'table' is comprehensive desktop table
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
   // State untuk Fitur Cepat Konfirmasi WhatsApp ke Nomor Panitia
   const [committeeNoticeApplicant, setCommitteeNoticeApplicant] = useState<Pendaftar | null>(null);
@@ -178,30 +185,30 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
       case 'TERVERIFIKASI':
         return (
           <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span>Terverifikasi</span>
-            <span className="text-[10px] opacity-75">({score}%)</span>
+            <span className="text-[10px] opacity-75 font-mono">({score}%)</span>
           </span>
         );
       case 'MENUNGGU VERIFIKASI':
         return (
           <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
-            <Clock className="w-3.5 h-3.5 text-amber-600" />
+            <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
             <span>Menunggu</span>
-            <span className="text-[10px] opacity-75">({score}%)</span>
+            <span className="text-[10px] opacity-75 font-mono">({score}%)</span>
           </span>
         );
       case 'PERLU PERBAIKAN':
         return (
           <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-300">
-            <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+            <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
             <span>Perlu Perbaikan</span>
           </span>
         );
       case 'DITOLAK':
         return (
           <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">
-            <XCircle className="w-3.5 h-3.5" />
+            <XCircle className="w-3.5 h-3.5 shrink-0" />
             <span>Ditolak</span>
           </span>
         );
@@ -209,35 +216,70 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       {/* Search & Filter Header Bar */}
-      <div className="p-4 sm:p-5 border-b border-slate-200 space-y-3">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="p-3.5 sm:p-5 border-b border-slate-200 space-y-3">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 sm:gap-3">
           {/* Search Box */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 max-w-lg">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari nama siswa, NISN, WhatsApp, atau sekolah..."
-              className="w-full text-xs sm:text-sm pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+              placeholder="Cari nama siswa, NISN, WA, sekolah..."
+              className="w-full text-xs sm:text-sm pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition min-h-[42px]"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 text-xs"
+                title="Hapus pencarian"
+              >
+                ✕
+              </button>
+            )}
           </div>
 
-          {/* Right Action Tools */}
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Filter Count summary */}
-            <span className="text-xs text-slate-500">
-              Menampilkan <strong>{filteredApplicants.length}</strong> dari <strong>{applicants.length}</strong> pendaftar
-            </span>
+          {/* Right Action Tools & View Switcher */}
+          <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap">
+            {/* View Mode Switcher: Cards vs Table */}
+            <div className="flex items-center space-x-1 bg-slate-100 p-0.5 sm:p-1 rounded-xl border border-slate-200/80">
+              <button
+                type="button"
+                onClick={() => setViewMode('cards')}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition min-h-[34px] ${
+                  viewMode === 'cards'
+                    ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Tampilan Kartu (Optimal untuk HP)"
+              >
+                <LayoutGrid className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Kartu</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition min-h-[34px] ${
+                  viewMode === 'table'
+                    ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Tampilan Tabel Komprehensif"
+              >
+                <TableIcon className="w-3.5 h-3.5 text-slate-600" />
+                <span>Tabel</span>
+              </button>
+            </div>
 
             {/* Fetch/Sync from Sheets button */}
             {onFetchFromSheets && (
               <button
                 onClick={onFetchFromSheets}
                 disabled={isFetchingFromSheets}
-                className="flex items-center space-x-1.5 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 text-emerald-800 border border-emerald-300/80 text-xs font-semibold px-3 py-2 rounded-lg transition disabled:opacity-50"
+                className="flex items-center space-x-1.5 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 text-emerald-800 border border-emerald-300/80 text-xs font-semibold px-2.5 sm:px-3 py-2 rounded-xl transition disabled:opacity-50 min-h-[36px]"
                 title={
                   isSheetsConnected
                     ? 'Tarik dan sinkronkan data pendaftar dari Google Sheets'
@@ -245,9 +287,9 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                 }
               >
                 <RefreshCw
-                  className={`w-3.5 h-3.5 text-emerald-700 ${isFetchingFromSheets ? 'animate-spin' : ''}`}
+                  className={`w-3.5 h-3.5 text-emerald-700 shrink-0 ${isFetchingFromSheets ? 'animate-spin' : ''}`}
                 />
-                <span>{isFetchingFromSheets ? 'Menarik...' : 'Tarik dari Sheets'}</span>
+                <span className="font-semibold">{isFetchingFromSheets ? 'Menarik...' : 'Tarik Sheets'}</span>
               </button>
             )}
 
@@ -260,39 +302,46 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                     : filteredApplicants
                 )
               }
-              className="flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg transition"
+              className="flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 sm:px-3 py-2 rounded-xl transition min-h-[36px]"
             >
-              <Download className="w-3.5 h-3.5 text-slate-600" />
+              <Download className="w-3.5 h-3.5 text-slate-600 shrink-0" />
               <span>
                 {selectedIds.length > 0
-                  ? `Ekspor (${selectedIds.length})`
-                  : 'Ekspor Excel'}
+                  ? `Excel (${selectedIds.length})`
+                  : 'Excel'}
               </span>
             </button>
           </div>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex flex-wrap gap-1.5 pt-1 text-xs">
+        {/* Filter Pills with Horizontal Touch Scroll */}
+        <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar py-1 text-xs -mx-3.5 px-3.5 sm:mx-0 sm:px-0 scroll-smooth">
           {[
-            { id: 'ALL', label: 'Semua Status' },
-            { id: 'TERVERIFIKASI', label: 'Terverifikasi' },
-            { id: 'MENUNGGU VERIFIKASI', label: 'Menunggu Verifikasi' },
-            { id: 'PERLU PERBAIKAN', label: 'Perlu Perbaikan' },
-            { id: 'BAYAR_SUDAH', label: 'Sudah Bayar' },
-            { id: 'BAYAR_BELUM', label: 'Belum Bayar' },
-            { id: 'PIP_YA', label: 'Penerima PIP' },
+            { id: 'ALL', label: 'Semua Status', count: applicants.length },
+            { id: 'TERVERIFIKASI', label: 'Terverifikasi', count: applicants.filter((a) => a.statusVerifikasi === 'TERVERIFIKASI').length },
+            { id: 'MENUNGGU VERIFIKASI', label: 'Menunggu', count: applicants.filter((a) => a.statusVerifikasi === 'MENUNGGU VERIFIKASI').length },
+            { id: 'PERLU PERBAIKAN', label: 'Perlu Perbaikan', count: applicants.filter((a) => a.statusVerifikasi === 'PERLU PERBAIKAN').length },
+            { id: 'BAYAR_SUDAH', label: 'Sudah Bayar', count: applicants.filter((a) => a.statusPembayaran === 'Sudah').length },
+            { id: 'BAYAR_BELUM', label: 'Belum Bayar', count: applicants.filter((a) => a.statusPembayaran === 'Belum').length },
+            { id: 'PIP_YA', label: 'Penerima PIP', count: applicants.filter((a) => a.pipSebelumnya === 'Ya').length },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => onFilterChange(tab.id)}
-              className={`px-3 py-1.5 rounded-lg font-medium transition ${
+              className={`px-3 py-2 rounded-xl font-medium whitespace-nowrap shrink-0 transition flex items-center space-x-1.5 min-h-[38px] active:scale-[0.98] ${
                 activeFilter === tab.id
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                  ? 'bg-slate-900 text-white shadow-2xs font-bold'
+                  : 'bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700'
               }`}
             >
-              {tab.label}
+              <span>{tab.label}</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
+                  activeFilter === tab.id ? 'bg-slate-800 text-emerald-300' : 'bg-slate-200 text-slate-700'
+                }`}
+              >
+                {tab.count}
+              </span>
             </button>
           ))}
         </div>
@@ -300,34 +349,34 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
 
       {/* Selected Action Floating Bar */}
       {selectedIds.length > 0 && (
-        <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-2.5 flex items-center justify-between text-xs text-emerald-900">
+        <div className="bg-emerald-50 border-b border-emerald-200 px-3 sm:px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-900 sticky top-14 sm:top-16 z-20 shadow-xs">
           <div className="flex items-center space-x-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>
               <strong>{selectedIds.length}</strong> siswa dipilih
             </span>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <button
               onClick={() => {
                 selectedIds.forEach((id) => onUpdateStatus(id, 'TERVERIFIKASI'));
                 setSelectedIds([]);
               }}
-              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-medium transition"
+              className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-lg font-medium transition min-h-[36px]"
             >
-              Tandai Terverifikasi
+              Verifikasi
             </button>
             <button
               onClick={() => setIsBulkDeleteModalOpen(true)}
-              className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-md font-medium transition flex items-center space-x-1"
+              className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-lg font-medium transition flex items-center space-x-1 min-h-[36px]"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Hapus ({selectedIds.length})</span>
             </button>
             <button
               onClick={() => setSelectedIds([])}
-              className="px-2 py-1 text-slate-600 hover:text-slate-800"
+              className="px-2.5 py-1.5 text-slate-600 hover:text-slate-800 min-h-[36px]"
             >
               Batal
             </button>
@@ -335,106 +384,61 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
         </div>
       )}
 
-      {/* Table Content */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs sm:text-sm border-collapse">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-              <th className="py-3 px-3 w-10 text-center">
-                <input
-                  type="checkbox"
-                  checked={
-                    filteredApplicants.length > 0 &&
-                    selectedIds.length === filteredApplicants.length
-                  }
-                  onChange={handleSelectAll}
-                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                />
-              </th>
-              <th className="py-3 px-3">ID Pendaftaran</th>
-              <th className="py-3 px-3">Calon Siswa & NISN</th>
-              <th className="py-3 px-3">Asal Sekolah</th>
-              <th className="py-3 px-3">WhatsApp Pendaftar</th>
-              <th className="py-3 px-3">Administrasi</th>
-              <th className="py-3 px-3">Status Verifikasi</th>
-              <th className="py-3 px-3">Google Sheets</th>
-              <th className="py-3 px-3 text-right">Aksi & Notifikasi</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200">
-            {filteredApplicants.length === 0 ? (
-              <tr>
-                <td colSpan={9} className="py-16 text-center text-slate-400">
-                  <div className="max-w-md mx-auto space-y-2.5 px-4">
-                    {applicants.length === 0 ? (
-                      <>
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto mb-3 shadow-2xs border border-emerald-100">
-                          <Users className="w-6 h-6 text-emerald-600" />
-                        </div>
-                        <p className="font-bold text-slate-800 text-base">Belum Ada Pendaftar Masuk</p>
-                        <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
-                          Dasbor siap menerima pendaftar baru. Data santri yang dikirimkan calon wali melalui Chatbot Layanan Pendaftaran akan langsung tercatat di sini secara otomatis.
-                        </p>
-                        {onFetchFromSheets && (
-                          <div className="pt-3">
-                            <button
-                              onClick={onFetchFromSheets}
-                              disabled={isFetchingFromSheets}
-                              className="inline-flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs disabled:opacity-50"
-                            >
-                              <RefreshCw
-                                className={`w-3.5 h-3.5 ${isFetchingFromSheets ? 'animate-spin' : ''}`}
-                              />
-                              <span>
-                                {isFetchingFromSheets
-                                  ? 'Sedang Menarik Data...'
-                                  : 'Tarik Data dari Google Sheets'}
-                              </span>
-                            </button>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <p className="font-semibold text-slate-700 text-sm">Tidak ada pendaftar yang cocok</p>
-                        <p className="text-xs text-slate-400 leading-relaxed">
-                          Coba sesuaikan kata kunci pencarian atau pilih filter status lain di tab atas.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              filteredApplicants.map((item) => (
-                <tr
-                  key={item.id}
-                  onClick={() => onSelectApplicant(item)}
-                  className="hover:bg-slate-50/80 transition cursor-pointer group"
-                >
-                  {/* Checkbox */}
-                  <td
-                    className="py-3 px-3 text-center"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(item.id)}
-                      onChange={() => handleToggleSelect(item.id)}
-                      className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                    />
-                  </td>
-
-                  {/* ID Pendaftaran */}
-                  <td className="py-3 px-3 whitespace-nowrap">
-                    <div className="flex items-center space-x-1.5">
-                      <span className="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+      {/* VIEW MODE 1: MOBILE TOUCH-FRIENDLY CARD LIST VIEW */}
+      {viewMode === 'cards' ? (
+        <div className="p-3 sm:p-4 space-y-3 bg-slate-50/60">
+          {filteredApplicants.length === 0 ? (
+            <div className="py-16 text-center text-slate-400 bg-white rounded-2xl border border-slate-200 p-6">
+              <div className="max-w-md mx-auto space-y-2.5">
+                {applicants.length === 0 ? (
+                  <>
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto mb-3 border border-emerald-100">
+                      <Users className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <p className="font-bold text-slate-800 text-base">Belum Ada Pendaftar Masuk</p>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
+                      Data santri yang dikirimkan calon wali melalui Chatbot Layanan Pendaftaran akan langsung tercatat di sini.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-semibold text-slate-700 text-sm">Tidak ada pendaftar yang cocok</p>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Coba sesuaikan kata kunci pencarian atau pilih filter status lain di tab atas.
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : (
+            filteredApplicants.map((item) => (
+              <div
+                key={item.id}
+                className={`bg-white rounded-2xl border transition shadow-xs overflow-hidden ${
+                  selectedIds.includes(item.id)
+                    ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                    : 'border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                {/* Card Header: Checkbox, ID, Timestamp, Status Badge */}
+                <div className="p-3.5 pb-2.5 border-b border-slate-100 flex items-start justify-between gap-2">
+                  <div className="flex items-center space-x-2 min-w-0">
+                    <label className="flex items-center min-h-[36px] min-w-[36px] -m-1 p-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(item.id)}
+                        onChange={() => handleToggleSelect(item.id)}
+                        className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      />
+                    </label>
+                    <div className="flex items-center space-x-1.5 min-w-0">
+                      <span className="font-mono text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 truncate">
                         {item.id}
                       </span>
                       <button
                         onClick={(e) => handleCopyId(item.id, e)}
-                        className="text-slate-400 hover:text-emerald-600 p-0.5 rounded"
-                        title="Salin ID Pendaftaran"
+                        className="p-1 text-slate-400 hover:text-emerald-600 active:text-emerald-700 rounded transition min-h-[32px] min-w-[32px] flex items-center justify-center"
+                        title="Salin ID"
                       >
                         {copiedId === item.id ? (
                           <Check className="w-3.5 h-3.5 text-emerald-600" />
@@ -443,184 +447,458 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                         )}
                       </button>
                     </div>
-                    <span className="text-[10px] text-slate-400 block mt-0.5">
+                  </div>
+
+                  <div className="shrink-0 flex items-center space-x-1.5">
+                    {getStatusBadge(item.statusVerifikasi, item.verificationScore)}
+                  </div>
+                </div>
+
+                {/* Card Body: Click to open detail modal */}
+                <div
+                  onClick={() => onSelectApplicant(item)}
+                  className="p-3.5 space-y-2.5 cursor-pointer hover:bg-slate-50/50 transition"
+                >
+                  {/* Candidate Name & Timestamp */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-950 leading-snug">
+                        {item.namaLengkap}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Wali: <strong className="text-slate-700">{item.namaWali}</strong>
+                      </p>
+                    </div>
+                    <span className="text-[10px] text-slate-400 shrink-0 font-medium">
                       {item.timestamp}
                     </span>
-                  </td>
+                  </div>
 
-                  {/* Calon Siswa & NISN */}
-                  <td className="py-3 px-3">
-                    <div className="font-semibold text-slate-900 leading-tight">
-                      {item.namaLengkap}
+                  {/* School & Location Info */}
+                  <div className="space-y-1 text-xs text-slate-600">
+                    <div className="flex items-center space-x-1.5 truncate">
+                      <GraduationCap className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span className="truncate">{item.asalSekolah}</span>
                     </div>
-                    <div className="text-[11px] text-slate-500 mt-0.5 flex items-center space-x-2">
-                      <span>NISN: <strong className="font-mono text-slate-700">{item.nisn}</strong></span>
-                      <span>•</span>
-                      <span>{item.tanggalLahir}</span>
+                    <div className="flex items-center space-x-1.5 truncate text-slate-500 text-[11px]">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="truncate">{item.alamatTinggal}</span>
                     </div>
-                    <div className="text-[11px] text-slate-400 truncate max-w-[200px]">
-                      Wali: {item.namaWali}
-                    </div>
-                  </td>
+                  </div>
 
-                  {/* Asal Sekolah */}
-                  <td className="py-3 px-3">
-                    <span className="font-medium text-slate-700 block">
-                      {item.asalSekolah}
+                  {/* Key Metadata Badges Strip */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {/* NISN */}
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-mono border border-slate-200">
+                      NISN: {item.nisn}
                     </span>
-                    <span className="text-[10px] text-slate-400 truncate block max-w-[180px]">
-                      {item.alamatTinggal}
-                    </span>
-                  </td>
 
-                  {/* No WhatsApp */}
-                  <td
-                    className="py-3 px-3 whitespace-nowrap"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                    {/* Payment Status */}
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border ${
+                        item.statusPembayaran === 'Sudah'
+                          ? 'bg-blue-50 text-blue-800 border-blue-200'
+                          : 'bg-amber-50 text-amber-800 border-amber-200'
+                      }`}
+                    >
+                      Bayar: {item.statusPembayaran}
+                      {item.statusPembayaran === 'Sudah' && item.nominalTransfer && ` (Rp ${item.nominalTransfer})`}
+                    </span>
+
+                    {/* PIP Status */}
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium border ${
+                        item.pipSebelumnya === 'Ya'
+                          ? 'bg-purple-50 text-purple-800 border-purple-200 font-semibold'
+                          : 'bg-slate-50 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      PIP: {item.pipSebelumnya}
+                    </span>
+
+                    {/* Google Sheets Sync Indicator */}
+                    {item.syncedToSheets ? (
+                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-medium">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        <span>Sheets</span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSyncSingleToSheets(item);
+                        }}
+                        className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[11px] font-medium transition"
+                      >
+                        <FileSpreadsheet className="w-3 h-3 text-amber-600" />
+                        <span>Sync Sheets</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card Action Bar: Mobile thumb-optimized actions */}
+                <div className="bg-slate-50/90 p-2.5 sm:p-3 border-t border-slate-100 space-y-2">
+                  {/* Primary WhatsApp Actions Row: Easy Thumb Reach */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Direct WhatsApp link */}
                     <a
                       href={`https://wa.me/${item.normalizedWa}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-1 text-xs font-medium text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-md transition"
+                      className="min-h-[42px] px-3 py-2 bg-white hover:bg-emerald-50 active:bg-emerald-100 text-emerald-800 border border-slate-200 hover:border-emerald-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-2xs active:scale-[0.98]"
+                      title={`Hubungi WhatsApp ${item.namaLengkap}`}
                     >
-                      <MessageSquare className="w-3 h-3 text-emerald-600" />
-                      <span>{item.noWa}</span>
+                      <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="truncate">{item.noWa}</span>
                     </a>
-                  </td>
 
-                  {/* Administrasi (PIP & Bayar) */}
-                  <td className="py-3 px-3 whitespace-nowrap">
-                    <div className="space-y-1">
-                      <div>
-                        <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
-                            item.statusPembayaran === 'Sudah'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-amber-100 text-amber-800'
-                          }`}
-                        >
-                          Bayar: {item.statusPembayaran}
-                        </span>
-                        {item.statusPembayaran === 'Sudah' && item.metodeTransfer && (
-                          <span className="block text-[9px] text-slate-500 font-medium truncate max-w-[120px]" title={`${item.metodeTransfer} - Rp ${item.nominalTransfer || ''} (${item.namaPengirimTransfer || ''})`}>
-                            {item.metodeTransfer} • {item.nominalTransfer ? `Rp ${item.nominalTransfer}` : ''}
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
-                            item.pipSebelumnya === 'Ya'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-slate-100 text-slate-600'
-                          }`}
-                        >
-                          PIP: {item.pipSebelumnya}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
+                    {/* Quick Reply (Balas WA) */}
+                    <button
+                      onClick={() => {
+                        setQuickReplyApplicant(item);
+                        setSelectedQuickTemplate(
+                          item.statusVerifikasi === 'TERVERIFIKASI'
+                            ? 'BERKAS_DITERIMA'
+                            : item.statusVerifikasi === 'PERLU PERBAIKAN'
+                            ? 'KURANG_PERSYARATAN'
+                            : 'BERKAS_DITERIMA'
+                        );
+                        setCustomReplyCatatan('');
+                      }}
+                      className="min-h-[42px] px-3 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition shadow-2xs active:scale-[0.98]"
+                      title="Balas Cepat WhatsApp ke Wali Santri"
+                    >
+                      <Zap className="w-4 h-4 text-amber-300 fill-amber-300 shrink-0" />
+                      <span>Balas Cepat</span>
+                    </button>
+                  </div>
 
-                  {/* Status Verifikasi */}
-                  <td className="py-3 px-3 whitespace-nowrap">
-                    {getStatusBadge(item.statusVerifikasi, item.verificationScore)}
-                  </td>
+                  {/* Secondary Actions Row: Committee Alert, Full Details, Delete */}
+                  <div className="flex items-center space-x-1.5 pt-0.5">
+                    {/* Committee WA notice */}
+                    <button
+                      onClick={() => {
+                        setCommitteeNoticeApplicant(item);
+                        setSelectedCommitteeTemplate(
+                          item.statusPembayaran === 'Sudah' ? 'KONFIRMASI_PEMBAYARAN' : 'LAPORAN_PENDAFTARAN'
+                        );
+                        setCommitteeCustomNote('');
+                        setCopiedCommitteeText(false);
+                      }}
+                      className="flex-1 min-h-[38px] px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 active:bg-teal-200 text-teal-800 border border-teal-200 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-2xs active:scale-[0.98]"
+                      title="Lapor ke WhatsApp Panitia"
+                    >
+                      <PhoneForwarded className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                      <span>Lapor Panitia</span>
+                    </button>
 
-                  {/* Google Sheets Sync status */}
-                  <td
-                    className="py-3 px-3 whitespace-nowrap"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {item.syncedToSheets ? (
-                      <span className="inline-flex items-center space-x-1 text-[11px] text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                        <span>Tersimpan</span>
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => onSyncSingleToSheets(item)}
-                        className={`inline-flex items-center space-x-1 text-[11px] px-2 py-0.5 rounded border transition ${
-                          isSheetsConnected
-                            ? 'text-slate-700 hover:text-emerald-700 bg-slate-100 hover:bg-emerald-50 border-slate-200'
-                            : 'text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border-amber-300 font-medium'
-                        }`}
-                        title={isSheetsConnected ? 'Sinkronkan ke Google Sheets' : 'Klik untuk hubungkan Google Sheets'}
-                      >
-                        <FileSpreadsheet className="w-3 h-3" />
-                        <span>{isSheetsConnected ? 'Sinkronkan' : 'Sambungkan'}</span>
-                      </button>
-                    )}
-                  </td>
+                    {/* Detail / Edit */}
+                    <button
+                      onClick={() => onSelectApplicant(item)}
+                      className="flex-1 min-h-[38px] px-2.5 py-1.5 bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-2xs active:scale-[0.98]"
+                      title="Lihat Detail & Edit Berkas"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                      <span>Detail & Edit</span>
+                    </button>
 
-                  {/* Actions & WhatsApp Notifications */}
-                  <td
-                    className="py-3 px-3 text-right whitespace-nowrap"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex items-center justify-end space-x-1.5">
-                      {/* Tombol Balas Cepat WA (Pilihan Template Otomatis ke Calon Santri/Wali) */}
-                      <button
-                        onClick={() => {
-                          setQuickReplyApplicant(item);
-                          setSelectedQuickTemplate(
-                            item.statusVerifikasi === 'TERVERIFIKASI'
-                              ? 'BERKAS_DITERIMA'
-                              : item.statusVerifikasi === 'PERLU PERBAIKAN'
-                              ? 'KURANG_PERSYARATAN'
-                              : 'BERKAS_DITERIMA'
-                          );
-                          setCustomReplyCatatan('');
-                        }}
-                        className="px-2 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center space-x-1 transition shadow-2xs"
-                        title="Balas Cepat WhatsApp ke Wali Santri (Berkas Diterima, Kurang Persyaratan, Jadwal Tes, dll)"
-                      >
-                        <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-                        <span className="hidden xl:inline text-[11px]">Balas WA</span>
-                      </button>
-
-                      {/* Tombol Cepat Konfirmasi WhatsApp ke Nomor Panitia */}
-                      <button
-                        onClick={() => {
-                          setCommitteeNoticeApplicant(item);
-                          setSelectedCommitteeTemplate(
-                            item.statusPembayaran === 'Sudah' ? 'KONFIRMASI_PEMBAYARAN' : 'LAPORAN_PENDAFTARAN'
-                          );
-                          setCommitteeCustomNote('');
-                          setCopiedCommitteeText(false);
-                        }}
-                        className="px-2 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-semibold text-xs flex items-center space-x-1 transition shadow-2xs"
-                        title={`Kirim Pesan Konfirmasi via WhatsApp ke Nomor Panitia (${academicYearConfig?.kontakAdminWa || '081225865715'})`}
-                      >
-                        <PhoneForwarded className="w-3.5 h-3.5 text-teal-200" />
-                        <span className="hidden xl:inline text-[11px]">WA Panitia</span>
-                      </button>
-
-                      {/* Detail Modal */}
-                      <button
-                        onClick={() => onSelectApplicant(item)}
-                        className="p-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition"
-                        title="Lihat Detail & Edit Berkas"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-
-                      {/* Delete */}
-                      <button
-                        onClick={() => setApplicantToDelete(item)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                        title="Hapus Data"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    {/* Delete */}
+                    <button
+                      onClick={() => setApplicantToDelete(item)}
+                      className="min-h-[38px] min-w-[38px] p-2 bg-white hover:bg-rose-50 active:bg-rose-100 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 rounded-xl flex items-center justify-center transition shadow-2xs active:scale-[0.98]"
+                      title="Hapus Data"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        /* VIEW MODE 2: COMPREHENSIVE TABLE VIEW */
+        <div className="overflow-x-auto">
+          {/* Mobile Table Swipe Notice */}
+          <div className="md:hidden bg-slate-100/90 border-b border-slate-200 px-3 py-2 text-[11px] text-slate-600 flex items-center justify-between">
+            <span className="flex items-center space-x-1">
+              <span>👉 Geser tabel ke samping untuk melihat kolom lengkap</span>
+            </span>
+            <button
+              onClick={() => setViewMode('cards')}
+              className="text-emerald-700 font-bold ml-2 underline shrink-0 active:text-emerald-900"
+            >
+              Mode Kartu
+            </button>
+          </div>
+          <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[800px]">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                <th className="py-3 px-3 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      filteredApplicants.length > 0 &&
+                      selectedIds.length === filteredApplicants.length
+                    }
+                    onChange={handleSelectAll}
+                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                </th>
+                <th className="py-3 px-3">ID Pendaftaran</th>
+                <th className="py-3 px-3">Calon Siswa & NISN</th>
+                <th className="py-3 px-3">Asal Sekolah</th>
+                <th className="py-3 px-3">WhatsApp Pendaftar</th>
+                <th className="py-3 px-3">Administrasi</th>
+                <th className="py-3 px-3">Status Verifikasi</th>
+                <th className="py-3 px-3">Google Sheets</th>
+                <th className="py-3 px-3 text-right">Aksi & Notifikasi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {filteredApplicants.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-16 text-center text-slate-400">
+                    <div className="max-w-md mx-auto space-y-2.5 px-4">
+                      {applicants.length === 0 ? (
+                        <>
+                          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto mb-3 shadow-2xs border border-emerald-100">
+                            <Users className="w-6 h-6 text-emerald-600" />
+                          </div>
+                          <p className="font-bold text-slate-800 text-base">Belum Ada Pendaftar Masuk</p>
+                          <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
+                            Dasbor siap menerima pendaftar baru. Data santri yang dikirimkan calon wali melalui Chatbot Layanan Pendaftaran akan langsung tercatat di sini secara otomatis.
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-semibold text-slate-700 text-sm">Tidak ada pendaftar yang cocok</p>
+                          <p className="text-xs text-slate-400 leading-relaxed">
+                            Coba sesuaikan kata kunci pencarian atau pilih filter status lain di tab atas.
+                          </p>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                filteredApplicants.map((item) => (
+                  <tr
+                    key={item.id}
+                    onClick={() => onSelectApplicant(item)}
+                    className="hover:bg-slate-50/80 transition cursor-pointer group"
+                  >
+                    {/* Checkbox */}
+                    <td
+                      className="py-3 px-3 text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(item.id)}
+                        onChange={() => handleToggleSelect(item.id)}
+                        className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                    </td>
+
+                    {/* ID Pendaftaran */}
+                    <td className="py-3 px-3 whitespace-nowrap">
+                      <div className="flex items-center space-x-1.5">
+                        <span className="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                          {item.id}
+                        </span>
+                        <button
+                          onClick={(e) => handleCopyId(item.id, e)}
+                          className="text-slate-400 hover:text-emerald-600 p-0.5 rounded"
+                          title="Salin ID Pendaftaran"
+                        >
+                          {copiedId === item.id ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                        {item.timestamp}
+                      </span>
+                    </td>
+
+                    {/* Calon Siswa & NISN */}
+                    <td className="py-3 px-3">
+                      <div className="font-semibold text-slate-900 leading-tight">
+                        {item.namaLengkap}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 flex items-center space-x-2">
+                        <span>NISN: <strong className="font-mono text-slate-700">{item.nisn}</strong></span>
+                        <span>•</span>
+                        <span>{item.tanggalLahir}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 truncate max-w-[200px]">
+                        Wali: {item.namaWali}
+                      </div>
+                    </td>
+
+                    {/* Asal Sekolah */}
+                    <td className="py-3 px-3">
+                      <span className="font-medium text-slate-700 block">
+                        {item.asalSekolah}
+                      </span>
+                      <span className="text-[10px] text-slate-400 truncate block max-w-[180px]">
+                        {item.alamatTinggal}
+                      </span>
+                    </td>
+
+                    {/* No WhatsApp */}
+                    <td
+                      className="py-3 px-3 whitespace-nowrap"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <a
+                        href={`https://wa.me/${item.normalizedWa}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center space-x-1 text-xs font-medium text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-md transition"
+                      >
+                        <MessageSquare className="w-3 h-3 text-emerald-600" />
+                        <span>{item.noWa}</span>
+                      </a>
+                    </td>
+
+                    {/* Administrasi (PIP & Bayar) */}
+                    <td className="py-3 px-3 whitespace-nowrap">
+                      <div className="space-y-1">
+                        <div>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
+                              item.statusPembayaran === 'Sudah'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-amber-100 text-amber-800'
+                            }`}
+                          >
+                            Bayar: {item.statusPembayaran}
+                          </span>
+                          {item.statusPembayaran === 'Sudah' && item.metodeTransfer && (
+                            <span className="block text-[9px] text-slate-500 font-medium truncate max-w-[120px]" title={`${item.metodeTransfer} - Rp ${item.nominalTransfer || ''} (${item.namaPengirimTransfer || ''})`}>
+                              {item.metodeTransfer} • {item.nominalTransfer ? `Rp ${item.nominalTransfer}` : ''}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
+                              item.pipSebelumnya === 'Ya'
+                                ? 'bg-purple-100 text-purple-800'
+                                : 'bg-slate-100 text-slate-600'
+                            }`}
+                          >
+                            PIP: {item.pipSebelumnya}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Status Verifikasi */}
+                    <td className="py-3 px-3 whitespace-nowrap">
+                      {getStatusBadge(item.statusVerifikasi, item.verificationScore)}
+                    </td>
+
+                    {/* Google Sheets Sync status */}
+                    <td
+                      className="py-3 px-3 whitespace-nowrap"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {item.syncedToSheets ? (
+                        <span className="inline-flex items-center space-x-1 text-[11px] text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <span>Tersimpan</span>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => onSyncSingleToSheets(item)}
+                          className={`inline-flex items-center space-x-1 text-[11px] px-2 py-0.5 rounded border transition ${
+                            isSheetsConnected
+                              ? 'text-slate-700 hover:text-emerald-700 bg-slate-100 hover:bg-emerald-50 border-slate-200'
+                              : 'text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border-amber-300 font-medium'
+                          }`}
+                          title={isSheetsConnected ? 'Sinkronkan ke Google Sheets' : 'Klik untuk hubungkan Google Sheets'}
+                        >
+                          <FileSpreadsheet className="w-3 h-3" />
+                          <span>{isSheetsConnected ? 'Sinkronkan' : 'Sambungkan'}</span>
+                        </button>
+                      )}
+                    </td>
+
+                    {/* Actions & WhatsApp Notifications */}
+                    <td
+                      className="py-3 px-3 text-right whitespace-nowrap"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-end space-x-1.5">
+                        {/* Tombol Balas Cepat WA */}
+                        <button
+                          onClick={() => {
+                            setQuickReplyApplicant(item);
+                            setSelectedQuickTemplate(
+                              item.statusVerifikasi === 'TERVERIFIKASI'
+                                ? 'BERKAS_DITERIMA'
+                                : item.statusVerifikasi === 'PERLU PERBAIKAN'
+                                ? 'KURANG_PERSYARATAN'
+                                : 'BERKAS_DITERIMA'
+                            );
+                            setCustomReplyCatatan('');
+                          }}
+                          className="px-2 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center space-x-1 transition shadow-2xs"
+                          title="Balas Cepat WhatsApp ke Wali Santri"
+                        >
+                          <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                          <span className="hidden xl:inline text-[11px]">Balas WA</span>
+                        </button>
+
+                        {/* Tombol Cepat Konfirmasi WhatsApp ke Nomor Panitia */}
+                        <button
+                          onClick={() => {
+                            setCommitteeNoticeApplicant(item);
+                            setSelectedCommitteeTemplate(
+                              item.statusPembayaran === 'Sudah' ? 'KONFIRMASI_PEMBAYARAN' : 'LAPORAN_PENDAFTARAN'
+                            );
+                            setCommitteeCustomNote('');
+                            setCopiedCommitteeText(false);
+                          }}
+                          className="px-2 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-semibold text-xs flex items-center space-x-1 transition shadow-2xs"
+                          title={`Kirim Pesan Konfirmasi via WhatsApp ke Nomor Panitia (${academicYearConfig?.kontakAdminWa || '081225865715'})`}
+                        >
+                          <PhoneForwarded className="w-3.5 h-3.5 text-teal-200" />
+                          <span className="hidden xl:inline text-[11px]">WA Panitia</span>
+                        </button>
+
+                        {/* Detail Modal */}
+                        <button
+                          onClick={() => onSelectApplicant(item)}
+                          className="p-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition"
+                          title="Lihat Detail & Edit Berkas"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Delete */}
+                        <button
+                          onClick={() => setApplicantToDelete(item)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                          title="Hapus Data"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Modal Konfirmasi Hapus Data Tunggal */}
       {applicantToDelete && (
@@ -966,16 +1244,16 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
             </div>
 
             {/* Modal Footer Actions */}
-            <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2">
+            <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
               <button
                 type="button"
                 onClick={() => setQuickReplyApplicant(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 active:bg-slate-300 transition min-h-[42px] flex items-center justify-center"
               >
                 Batal
               </button>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -1007,9 +1285,9 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                     navigator.clipboard.writeText(msg);
                     alert('Teks pesan WhatsApp berhasil disalin ke clipboard!');
                   }}
-                  className="px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center space-x-1"
+                  className="w-full sm:w-auto px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-xs font-semibold transition flex items-center justify-center space-x-1.5 min-h-[42px]"
                 >
-                  <Copy className="w-3.5 h-3.5" />
+                  <Copy className="w-4 h-4 text-slate-500" />
                   <span>Salin Teks</span>
                 </button>
 
@@ -1046,9 +1324,9 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                     onSendNotification(quickReplyApplicant, selectedQuickTemplate);
                     setQuickReplyApplicant(null);
                   }}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition flex items-center space-x-1.5"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-sm transition flex items-center justify-center space-x-2 min-h-[42px] active:scale-[0.98]"
                 >
-                  <Send className="w-3.5 h-3.5" />
+                  <Send className="w-4 h-4" />
                   <span>Buka WhatsApp & Kirim</span>
                 </button>
               </div>
@@ -1226,16 +1504,16 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
             </div>
 
             {/* Modal Footer Actions */}
-            <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2">
+            <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
               <button
                 type="button"
                 onClick={() => setCommitteeNoticeApplicant(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 active:bg-slate-300 transition min-h-[42px] flex items-center justify-center"
               >
                 Batal
               </button>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -1248,16 +1526,16 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                     setCopiedCommitteeText(true);
                     setTimeout(() => setCopiedCommitteeText(false), 2500);
                   }}
-                  className="px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center space-x-1"
+                  className="w-full sm:w-auto px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-xs font-semibold transition flex items-center justify-center space-x-1.5 min-h-[42px]"
                 >
                   {copiedCommitteeText ? (
                     <>
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <Check className="w-4 h-4 text-emerald-600" />
                       <span className="text-emerald-700 font-bold">Tersalin!</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-4 h-4 text-slate-500" />
                       <span>Salin Teks</span>
                     </>
                   )}
@@ -1280,9 +1558,9 @@ export const MonitoringTable: React.FC<MonitoringTableProps> = ({
                     }
                     setCommitteeNoticeApplicant(null);
                   }}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white shadow-sm transition flex items-center space-x-1.5"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white shadow-sm transition flex items-center justify-center space-x-2 min-h-[42px] active:scale-[0.98]"
                 >
-                  <PhoneForwarded className="w-3.5 h-3.5 text-teal-200" />
+                  <PhoneForwarded className="w-4 h-4 text-teal-200" />
                   <span>Kirim ke WA Panitia</span>
                 </button>
               </div>
